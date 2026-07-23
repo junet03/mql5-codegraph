@@ -33,6 +33,8 @@ surface without changing its local trusted-input product boundary.
 - Diagnosed the first hosted Linux CI failure as a test-fixture checkout mismatch: the golden CLI
   contract declares LF bytes, while the repository-wide MQL5 rule requested CRLF. Added fixture-specific
   LF attributes and a contract assertion without changing production fingerprint semantics.
+- Enabled `main` branch protection with strict up-to-date CI, pull requests, stale-review dismissal,
+  conversation resolution, linear history, admin enforcement, and force-push/deletion prevention.
 
 ## Decisions
 
@@ -54,6 +56,7 @@ surface without changing its local trusted-input product boundary.
 | Full Python suite | `python -m unittest discover -s tests` | 106 passed in 9.524s |
 | CI regression fix | `python -m unittest tests.test_cli.CliTests.test_legacy_contract_golden_bytes` | 1 passed in 0.072s; Git attributes resolve all three MQL5 fixtures to LF |
 | Full Python suite after CI fix | `python -m unittest discover -s tests` | 106 passed in 9.350s |
+| Hosted CI after regression fix | GitHub Actions run `30022280211` | All six jobs passed: dashboard, package, and Python 3.11/3.14 on Ubuntu and Windows |
 | Python compilation | `python -m compileall -q src tests tools` | Exit 0 |
 | Frontend lint | `npm --prefix web run lint` | Exit 0; no warnings |
 | Frontend build | `npm --prefix web run build` | Vite 8.1.5 build passed in 423ms |
@@ -64,18 +67,16 @@ surface without changing its local trusted-input product boundary.
 | GitHub metadata | Repository API readback | Description, nine topics, squash-only, auto-delete, Wiki/Projects off |
 | GitHub dependency security | Vulnerability-alert and automated-fix API readback | Alerts enabled; automated fixes enabled |
 | GitHub Actions policy | Actions permissions API readback | Actions enabled; complete SHA pinning required |
-| Directed project graph | `graphify update .` plus directed multigraph diagnostic | 1,628 nodes, 2,919 edges, 153 communities; no missing, dangling, self-loop, duplicate, or collapsed edges |
+| GitHub branch protection | Branch protection API readback | Strict six-check CI, pull requests, conversations, linear history, admins enforced; force push and deletion disabled |
+| Directed project graph | `graphify update .` plus directed multigraph diagnostic | 1,628 nodes, 2,919 edges, 152 communities; no missing, dangling, self-loop, duplicate, or collapsed edges |
 | Privacy scan | 178 prospective files; sensitive filenames, emails, profile paths, workstation name, and high-confidence key/token formats | No matches |
 
 ## Risks and unresolved questions
 
 - GitHub does not expose a first-time Social Preview upload for this new private repository. The compliant
   PNG is committed and ready; upload becomes available if the repository is made public.
-- The fixture correction still requires a hosted rerun on all four Python runner combinations.
 - CodeQL/default code scanning remains disabled because private-repository support can require a paid
   GitHub Code Security or Advanced Security entitlement.
-- `main` branch protection should be enabled only after the new CI check contexts exist and if the current
-  GitHub plan supports enforcement for private repositories.
 - Graphify again reported 11 JSON/manifest files that produced zero AST nodes. Directed integrity is clean;
   the warning is unchanged and does not concern executable source.
 
