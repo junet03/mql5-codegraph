@@ -47,8 +47,12 @@ The MVP is a tolerant structural analyzer, not a MetaEditor compiler frontend.
   membership scans, overlapping nested-argument scans, repeated binding-list scans, and Cartesian ambiguous
   call-edge fan-out. A hosted or multi-tenant release is gated on explicit work budgets or linear-time
   structures for these paths.
+- The private MCP plugin inherits this local trusted-input boundary. It keeps one in-memory snapshot and
+  exposes bounded Intelligence Kernel operations, but initial repository analysis still has no universal
+  wall-clock or work budget.
 
 Planned milestones include a formal Tree-sitter MQL5 grammar, richer type inference, incremental indexing,
-Graphify/Neo4j adapters, an experimental MCP adapter, protected evidence freshness probes, and
-compile-diagnostic correlation with MetaEditor. A stable MCP surface remains deferred until its contracts
-can preserve the same versioning, evidence, ambiguity, and completion semantics.
+Graphify/Neo4j adapters, protected evidence freshness probes, and compile-diagnostic correlation with
+MetaEditor. The experimental private MCP adapter now exists; a stable public MCP surface remains deferred
+until its contracts can preserve the same versioning, evidence, ambiguity, completion, and resource-budget
+semantics.

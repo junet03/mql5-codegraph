@@ -6,7 +6,7 @@ The pipeline is intentionally layered:
 source discovery -> lexer -> structural parser -> repository resolver
                  -> MQL5 runtime enrichment -> canonical CodeGraph
                  -> immutable GraphIndex -> IntelligenceKernel
-                                         -> CLI/Web/future protocol adapters
+                                         -> CLI/Web/private MCP adapters
 ```
 
 The lexer owns source fidelity and recovery. The parser extracts declarations and call sites without
@@ -34,7 +34,7 @@ lookup and adjacency tables from one graph snapshot. `IntelligenceKernel` owns:
 One kernel instance observes one immutable graph identity. `DashboardState` atomically publishes the graph,
 kernel, repository root, and revision, so a request cannot mix snapshots during reload.
 
-Analysis semantics must not be implemented in CLI, Web, or a future MCP adapter. Adapters may normalize
+Analysis semantics must not be implemented in CLI, Web, or the MCP adapter. Adapters may normalize
 transport-derived defaults, map HTTP status or CLI exit codes, and preserve legacy projections.
 
 ## Adapter and compatibility matrix
@@ -44,12 +44,16 @@ transport-derived defaults, map HTTP status or CLI exit codes, and preserve lega
 | Direct Python | Intelligence contract `1.0.0` | Authoritative normalized result |
 | `intelligence` CLI namespace | Intelligence contract `1.0.0` | Argument normalization and JSON/error projection |
 | `/api/v1/intelligence/*` | Intelligence contract `1.0.0` | Route defaults, HTTP status, JSON projection |
+| Private MCP stdio alpha | Experimental eight-tool projection | One trusted in-memory snapshot and structured tool errors |
 | Legacy CLI and unversioned HTTP | Frozen historical shapes | Exact compatibility projector over the same snapshot |
 | GraphML and representation exporters | Canonical graph schema | Transform representation without reinterpreting semantics |
 
 The Intelligence contract and canonical graph schema are versioned independently. Patch releases preserve
 valid shapes and semantics. Minor Intelligence versions may add optional fields. Changed defaults, ranking,
 errors, removed fields, or incompatible behavior require a new major and a new `/api/vN` HTTP prefix.
+
+The private MCP tool names are not part of the stable compatibility promise. Its official SDK dependency
+is optional and capped below 2.x so a major protocol-runtime migration remains deliberate.
 
 ## Evidence and uncertainty
 

@@ -36,6 +36,22 @@ and dashboard routes retain their frozen legacy shapes and defaults.
 Relationship results preserve direction, type, origin, confidence, source location, and explicit evidence
 state. Stored locations are references, not proof that a file is still present or unchanged.
 
+## Private Codex plugin (experimental)
+
+The repository includes `mql5-codegraph-intelligence`, a private local Codex plugin with four MQL5
+workflow skills and eight read-only MCP tools. It projects the same Intelligence Kernel contract and does
+not edit source, persist an index, or use the network.
+
+```powershell
+python -m pip install -e ".[mcp]"
+codex plugin marketplace add D:\mql5-codegraph
+codex plugin add mql5-codegraph-intelligence@mql5-codegraph-internal
+```
+
+Start a fresh Codex task after installation. The agent should call `project_status`, index an explicitly
+trusted local root when needed, and re-index after source changes. The plugin is an internal alpha, not a
+stable public MCP contract, and is not approved for hosted or untrusted-repository ingestion.
+
 ## Local dashboard
 
 Build the dashboard once, then launch it against any local MQL5 repository:

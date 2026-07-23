@@ -1,0 +1,246 @@
+"""Official-SDK MCP stdio projection for MQL5 CodeGraph."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
+from mcp.types import ToolAnnotations
+
+from .service import AdapterError, ProjectSession
+
+
+SERVER_NAME = "mql5-codegraph-intelligence"
+SERVER_INSTRUCTIONS = (
+    "Local, read-only MQL5 project intelligence. Call project_status first. "
+    "Call index_project only for a trusted absolute local project root, then "
+    "use bounded intelligence tools. Preserve ambiguity, evidence origin, "
+    "completion, truncation, and graph fingerprint in every claim. Re-index "
+    "after source changes. This experimental server never edits source, writes "
+    "indexes, or accesses the network."
+)
+READ_ONLY_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+
+def _call(method, /, *args, **kwargs) -> dict[str, Any]:
+    try:
+        return method(*args, **kwargs)
+    except AdapterError as error:
+        raise ToolError(error.to_json()) from error
+
+
+def create_server(session: ProjectSession | None = None) -> FastMCP:
+    """Create one MCP server bound to one in-memory project session."""
+
+    project = session or ProjectSession()
+    server = FastMCP(
+        SERVER_NAME,
+        instructions=SERVER_INSTRUCTIONS,
+        log_level="ERROR",
+    )
+
+    @server.tool(
+        name="project_status",
+        description=(
+            "Report the active in-memory MQL5 project snapshot without scanning "
+            "or changing the filesystem."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def project_status() -> dict[str, Any]:
+        return _call(project.project_status)
+
+    @server.tool(
+        name="index_project",
+        description=(
+            "Read a trusted local MQL5 project into an in-memory graph snapshot. "
+            "This does not modify source or persist an index."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def index_project(
+        root: str,
+        include_roots: list[str] | None = None,
+        excluded: list[str] | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.index_project,
+            root,
+            include_roots or (),
+            excluded or (),
+        )
+
+    @server.tool(
+        name="query_symbols",
+        description=(
+            "Resolve an MQL5 symbol while preserving exact, normalized, "
+            "ambiguous, or no-match status."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def query_symbols(
+        target: str,
+        kind: str | None = None,
+        max_items: int = 30,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.query_symbols,
+            target,
+            kind=kind,
+            max_items=max_items,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    @server.tool(
+        name="get_context",
+        description=(
+            "Return bounded incoming, outgoing, or bidirectional relationship "
+            "context with evidence and completion metadata."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def get_context(
+        target: str,
+        direction: str = "both",
+        relationship_types: list[str] | None = None,
+        max_depth: int = 1,
+        max_items: int = 900,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.get_context,
+            target,
+            direction=direction,
+            relationship_types=relationship_types,
+            max_depth=max_depth,
+            max_items=max_items,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    @server.tool(
+        name="get_impact",
+        description=(
+            "Return bounded upstream impact for a symbol with relationship "
+            "evidence and truncation metadata."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def get_impact(
+        target: str,
+        relationship_types: list[str] | None = None,
+        max_depth: int = 3,
+        max_items: int = 2000,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.get_impact,
+            target,
+            relationship_types=relationship_types,
+            max_depth=max_depth,
+            max_items=max_items,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    @server.tool(
+        name="find_paths",
+        description=(
+            "Find bounded directed paths between two MQL5 symbols with evidence "
+            "for every hop and explicit incomplete-search reporting."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def find_paths(
+        source: str,
+        target: str,
+        direction: str = "outgoing",
+        relationship_types: list[str] | None = None,
+        max_depth: int = 5,
+        max_paths: int = 3,
+        max_expansions: int = 10_000,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.find_paths,
+            source,
+            target,
+            direction=direction,
+            relationship_types=relationship_types,
+            max_depth=max_depth,
+            max_paths=max_paths,
+            max_expansions=max_expansions,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    @server.tool(
+        name="get_context_package",
+        description=(
+            "Build a deterministic bounded context package for AI review while "
+            "preserving evidence, ambiguity, and omission reasons."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def get_context_package(
+        target: str,
+        direction: str = "both",
+        relationship_types: list[str] | None = None,
+        node_kinds: list[str] | None = None,
+        max_depth: int = 2,
+        max_expansions: int = 10_000,
+        context_units: int = 100,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.get_context_package,
+            target,
+            direction=direction,
+            relationship_types=relationship_types,
+            node_kinds=node_kinds,
+            max_depth=max_depth,
+            max_expansions=max_expansions,
+            context_units=context_units,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    @server.tool(
+        name="get_diagnostics",
+        description=(
+            "Return bounded graph diagnostics from the active project snapshot."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def get_diagnostics(
+        max_items: int = 250,
+        expected_source_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            project.get_diagnostics,
+            max_items=max_items,
+            expected_source_fingerprint=expected_source_fingerprint,
+        )
+
+    return server
+
+
+def main() -> None:
+    """Run the bundled local server over MCP stdio."""
+
+    create_server().run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

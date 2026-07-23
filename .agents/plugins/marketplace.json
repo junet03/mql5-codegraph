@@ -1,0 +1,20 @@
+{
+  "name": "mql5-codegraph-internal",
+  "interface": {
+    "displayName": "Mql5 Codegraph Internal"
+  },
+  "plugins": [
+    {
+      "name": "mql5-codegraph-intelligence",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mql5-codegraph-intelligence"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

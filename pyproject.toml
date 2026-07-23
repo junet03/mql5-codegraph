@@ -20,6 +20,10 @@ classifiers = [
 
 [project.scripts]
 mql5-codegraph = "mql5_codegraph.cli:main"
+mql5-codegraph-mcp = "mql5_codegraph.mcp.server:main"
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.28.1,<2"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

@@ -1,0 +1,35 @@
+{
+  "name": "mql5-codegraph-intelligence",
+  "version": "0.1.0+codex.20260723151025",
+  "description": "Evidence-backed local MQL5 project intelligence for internal Codex agents",
+  "author": {
+    "name": "MQL5 CodeGraph Contributors",
+    "url": "https://github.com/junet03/mql5-codegraph"
+  },
+  "repository": "https://github.com/junet03/mql5-codegraph",
+  "license": "MIT",
+  "keywords": [
+    "mql5",
+    "metatrader",
+    "codegraph",
+    "static-analysis",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "MQL5 CodeGraph Intelligence",
+    "shortDescription": "Navigate MQL5 projects with evidence-backed graph tools.",
+    "longDescription": "Index trusted local MQL5 repositories in memory, query symbols and relationships, trace impact and paths, and assemble bounded AI context without modifying source files.",
+    "developerName": "MQL5 CodeGraph Contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Index this MQL5 project and explain its architecture.",
+      "Trace the impact of changing this MQL5 symbol.",
+      "Run the MQL5 static-analysis release gate."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}
