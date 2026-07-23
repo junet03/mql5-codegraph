@@ -30,6 +30,9 @@ surface without changing its local trusted-input product boundary.
   enabled squash-only merging, branch updates, automatic head-branch deletion, Dependabot alerts,
   automated security fixes, and mandatory SHA-pinned Actions.
 - Added matching dependency, Python, JavaScript, and GitHub Actions labels.
+- Diagnosed the first hosted Linux CI failure as a test-fixture checkout mismatch: the golden CLI
+  contract declares LF bytes, while the repository-wide MQL5 rule requested CRLF. Added fixture-specific
+  LF attributes and a contract assertion without changing production fingerprint semantics.
 
 ## Decisions
 
@@ -49,6 +52,8 @@ surface without changing its local trusted-input product boundary.
 | YAML validation | `uvx --from yamllint yamllint .github` | Exit 0 |
 | Actions validation | `go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/ci.yml` | Exit 0 |
 | Full Python suite | `python -m unittest discover -s tests` | 106 passed in 9.524s |
+| CI regression fix | `python -m unittest tests.test_cli.CliTests.test_legacy_contract_golden_bytes` | 1 passed in 0.072s; Git attributes resolve all three MQL5 fixtures to LF |
+| Full Python suite after CI fix | `python -m unittest discover -s tests` | 106 passed in 9.350s |
 | Python compilation | `python -m compileall -q src tests tools` | Exit 0 |
 | Frontend lint | `npm --prefix web run lint` | Exit 0; no warnings |
 | Frontend build | `npm --prefix web run build` | Vite 8.1.5 build passed in 423ms |
@@ -66,8 +71,7 @@ surface without changing its local trusted-input product boundary.
 
 - GitHub does not expose a first-time Social Preview upload for this new private repository. The compliant
   PNG is committed and ready; upload becomes available if the repository is made public.
-- The workflow must run on GitHub after the branch is pushed; local validation cannot prove hosted runner
-  availability.
+- The fixture correction still requires a hosted rerun on all four Python runner combinations.
 - CodeQL/default code scanning remains disabled because private-repository support can require a paid
   GitHub Code Security or Advanced Security entitlement.
 - `main` branch protection should be enabled only after the new CI check contexts exist and if the current

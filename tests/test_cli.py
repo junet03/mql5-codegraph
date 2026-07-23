@@ -189,6 +189,14 @@ class CliTests(TestCase):
                 encoding="utf-8"
             )
         )
+        if contract.get("newline") == "LF":
+            for source_path in FIXTURE.rglob("*"):
+                if source_path.suffix.lower() in {".mq5", ".mqh"}:
+                    self.assertNotIn(
+                        b"\r",
+                        source_path.read_bytes(),
+                        f"{source_path.name} must preserve the contract's LF newlines",
+                    )
         with TemporaryDirectory() as directory:
             graph_path = Path(directory) / "graph.json"
             graphml_path = Path(directory) / "graph.graphml"
