@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a bounded capability or workflow improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: >-
+        Describe the user or engineering problem, not only the preferred implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: State observable behavior and acceptance criteria.
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Primary boundary
+      options:
+        - Canonical graph or schema
+        - Intelligence Kernel
+        - CLI
+        - Local dashboard or HTTP API
+        - MCP or Codex plugin
+        - Project governance or release
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and examples
+      description: >-
+        Include sanitized examples, constraints, and known alternatives.
+  - type: textarea
+    id: risks
+    attributes:
+      label: Compatibility and risk
+      description: >-
+        Note security, performance, schema, storage, ambiguity, or migration concerns.

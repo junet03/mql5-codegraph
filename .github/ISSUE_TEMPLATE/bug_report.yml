@@ -1,0 +1,68 @@
+name: Bug report
+description: >-
+  Report a reproducible defect in the analyzer, adapters, dashboard, or plugin.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. Follow SECURITY.md instead.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v0.2.0 or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Analyzer or Intelligence Kernel
+        - CLI
+        - Local dashboard or HTTP API
+        - MCP or Codex plugin
+        - Packaging or CI
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include sanitized source, commands, and deterministic steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: >-
+        Include sanitized output. Never include credentials or private trading code.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Windows version, Python, Node.js, Codex/plugin version
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: >-
+            I removed credentials, personal data, account identifiers, and private MQL5 source.
+          required: true
+        - label: I searched existing issues for the same behavior.
+          required: true

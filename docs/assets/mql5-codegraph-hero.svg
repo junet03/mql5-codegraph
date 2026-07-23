@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">MQL5 CodeGraph</title>
+  <desc id="description">Evidence-backed code intelligence for MQL5 projects, illustrated as a directed source graph.</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="32" x2="1190" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A1B31"/>
+      <stop offset="0.52" stop-color="#07111F"/>
+      <stop offset="1" stop-color="#050B14"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#78F3FF"/>
+      <stop offset="1" stop-color="#13A8FF"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFD27A"/>
+      <stop offset="1" stop-color="#FF9A3D"/>
+    </linearGradient>
+    <radialGradient id="cyanGlow">
+      <stop stop-color="#22D3EE" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="amberGlow">
+      <stop stop-color="#FFB454" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFB454" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#C9E8FF" stroke-opacity="0.055"/>
+    </pattern>
+    <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="nodeShadow" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#000814" flood-opacity="0.55"/>
+    </filter>
+    <marker id="arrowCyan" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#3BD7FF"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#FFB454"/>
+    </marker>
+    <clipPath id="frameClip">
+      <rect width="1280" height="640" rx="36"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frameClip)">
+    <rect width="1280" height="640" fill="url(#background)"/>
+    <rect width="1280" height="640" fill="url(#grid)"/>
+    <circle cx="1028" cy="294" r="390" fill="url(#cyanGlow)"/>
+    <circle cx="1142" cy="566" r="240" fill="url(#amberGlow)"/>
+    <path d="M-35 560C252 430 338 700 626 548C848 431 994 457 1318 336" fill="none" stroke="#7BE7FF" stroke-opacity="0.065" stroke-width="2"/>
+    <path d="M-34 590C240 470 356 718 652 570C882 455 1042 482 1320 378" fill="none" stroke="#FFB454" stroke-opacity="0.055" stroke-width="2"/>
+
+    <g font-family="Inter, Segoe UI, Arial, sans-serif">
+      <g transform="translate(80 72)">
+        <rect width="232" height="38" rx="19" fill="#0E2D46" stroke="#2DCDF4" stroke-opacity="0.45"/>
+        <circle cx="21" cy="19" r="5" fill="#49E5FF"/>
+        <text x="38" y="25" fill="#A8EFFF" font-size="14" font-weight="700" letter-spacing="1.8">PROJECT INTELLIGENCE</text>
+      </g>
+
+      <text x="78" y="229" fill="#F3FAFF" font-size="77" font-weight="800" letter-spacing="-3.6">MQL5</text>
+      <text x="78" y="310" fill="url(#cyan)" font-size="77" font-weight="800" letter-spacing="-3.6">CodeGraph</text>
+      <text x="82" y="367" fill="#B7CBE0" font-size="24" font-weight="500">Evidence-backed intelligence for MQL5 projects.</text>
+
+      <g transform="translate(82 410)" font-size="15" font-weight="700" letter-spacing="0.55">
+        <rect width="153" height="42" rx="12" fill="#0C2034" stroke="#24445E"/>
+        <circle cx="22" cy="21" r="5" fill="#43DFFF"/>
+        <text x="37" y="27" fill="#D9ECFA">STATIC ANALYSIS</text>
+
+        <g transform="translate(166)">
+          <rect width="156" height="42" rx="12" fill="#0C2034" stroke="#24445E"/>
+          <circle cx="22" cy="21" r="5" fill="#FFB454"/>
+          <text x="37" y="27" fill="#D9ECFA">IMPACT TRACING</text>
+        </g>
+
+        <g transform="translate(335)">
+          <rect width="109" height="42" rx="12" fill="#0C2034" stroke="#24445E"/>
+          <circle cx="22" cy="21" r="5" fill="#8B9CFF"/>
+          <text x="37" y="27" fill="#D9ECFA">MCP</text>
+        </g>
+      </g>
+
+      <g transform="translate(82 536)">
+        <path d="M0 0H442" stroke="#2B4962"/>
+        <text y="36" fill="#7792A9" font-size="14" font-weight="600" letter-spacing="1.1">LOCAL-FIRST  /  READ-ONLY  /  DETERMINISTIC</text>
+      </g>
+    </g>
+
+    <g filter="url(#nodeShadow)">
+      <g fill="none" stroke-linecap="round">
+        <path d="M761 179C838 196 861 225 910 268" stroke="#3BD7FF" stroke-opacity="0.78" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+        <path d="M926 141C929 190 936 219 943 261" stroke="#3BD7FF" stroke-opacity="0.64" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+        <path d="M1118 198C1065 222 1027 244 986 277" stroke="#FFB454" stroke-opacity="0.78" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+        <path d="M1123 357C1074 339 1031 326 991 313" stroke="#3BD7FF" stroke-opacity="0.68" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+        <path d="M1042 492C1007 433 981 394 962 348" stroke="#FFB454" stroke-opacity="0.72" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+        <path d="M812 455C856 412 893 376 925 344" stroke="#3BD7FF" stroke-opacity="0.72" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+        <path d="M761 179C840 128 871 123 910 135" stroke="#687BFF" stroke-opacity="0.42" stroke-width="2"/>
+        <path d="M812 455C900 514 971 524 1042 492" stroke="#687BFF" stroke-opacity="0.34" stroke-width="2"/>
+      </g>
+
+      <g transform="translate(949 305)">
+        <circle r="102" fill="#0A192A" stroke="#2A6986" stroke-width="2"/>
+        <circle r="84" fill="#0D2337" stroke="#42D9F9" stroke-opacity="0.45"/>
+        <circle r="108" fill="none" stroke="#3BD7FF" stroke-opacity="0.2" stroke-width="2" stroke-dasharray="5 11"/>
+        <path d="M-33-24L-59 0L-33 24M33-24L59 0L33 24M13-43L-13 43" fill="none" stroke="url(#cyan)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle r="128" fill="#22D3EE" opacity="0.055" filter="url(#softGlow)"/>
+      </g>
+
+      <g transform="translate(728 171)">
+        <circle r="39" fill="#0D2235" stroke="#46DCFA" stroke-width="2"/>
+        <path d="M-12-9H12M-12 0H7M-12 9H15" stroke="#8CEEFF" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(925 119)">
+        <circle r="34" fill="#111D38" stroke="#7D8BFF" stroke-width="2"/>
+        <path d="M-11 0H11M0-11V11" stroke="#B6BEFF" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(1153 181)">
+        <circle r="38" fill="#2A1D13" stroke="#FFB454" stroke-width="2"/>
+        <path d="M-13 7L-4-5L4 3L15-12" fill="none" stroke="#FFD38B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(1162 372)">
+        <circle r="35" fill="#0D2235" stroke="#46DCFA" stroke-width="2"/>
+        <circle r="11" fill="none" stroke="#8CEEFF" stroke-width="3"/>
+        <path d="M8 8L17 17" stroke="#8CEEFF" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(1063 522)">
+        <circle r="40" fill="#2A1D13" stroke="#FFB454" stroke-width="2"/>
+        <path d="M-14 5L-4 15L16-14" fill="none" stroke="#FFD38B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(783 483)">
+        <circle r="36" fill="#111D38" stroke="#7D8BFF" stroke-width="2"/>
+        <path d="M-12-8H12V10H-12ZM-5-15H5" fill="none" stroke="#B6BEFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.8">
+      <text x="681" y="226" fill="#7397AE">SOURCE</text>
+      <text x="891" y="73" fill="#7784C7">INDEX</text>
+      <text x="1123" y="128" fill="#B8895A">IMPACT</text>
+      <text x="1142" y="430" fill="#7397AE">QUERY</text>
+      <text x="1028" y="584" fill="#B8895A">GATE</text>
+      <text x="744" y="545" fill="#7784C7">CONTEXT</text>
+    </g>
+  </g>
+  <rect x="1" y="1" width="1278" height="638" rx="35" fill="none" stroke="#A9DFFF" stroke-opacity="0.12" stroke-width="2"/>
+</svg>

@@ -1,5 +1,16 @@
 # MQL5 CodeGraph
 
+<p align="center">
+  <img src="docs/assets/mql5-codegraph-hero.svg" alt="MQL5 CodeGraph — evidence-backed intelligence for MQL5 projects" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-2EA44F.svg"></a>
+  <img alt="Status: private alpha" src="https://img.shields.io/badge/Status-Private%20Alpha-FF9A3D">
+</p>
+
 MQL5 CodeGraph is an offline static-analysis library and CLI that builds an evidence-backed graph
 from MetaTrader 5 `.mq5` and `.mqh` source. It treats terminal callbacks as runtime relationships,
 keeps inferred edges separate from source calls, and stores a deterministic backend-neutral JSON index.
@@ -52,6 +63,8 @@ Start a fresh Codex task after installation. The agent should call `project_stat
 trusted local root when needed, and re-index after source changes. The plugin is an internal alpha, not a
 stable public MCP contract, and is not approved for hosted or untrusted-repository ingestion.
 
+See the [plugin quickstart](specs/004-mql5-agent-plugin/quickstart.md) for the complete local workflow.
+
 ## Local dashboard
 
 Build the dashboard once, then launch it against any local MQL5 repository:
@@ -82,3 +95,11 @@ See [architecture](docs/architecture.md), [known limitations](docs/limitations.m
 [dashboard guide](docs/web-dashboard.md). Multi-session work is recorded in the
 [project journal](docs/project-journal/README.md), with durable choices tracked as
 [architecture decisions](docs/decisions/README.md).
+
+## License and trademarks
+
+The source code and associated software documentation are available under the [MIT License](LICENSE).
+The project visual identity and artwork are covered by [BRAND.md](BRAND.md).
+
+MetaTrader 5 and MQL5 are trademarks of MetaQuotes Ltd. MQL5 CodeGraph is an independent project and is
+not affiliated with, sponsored by, or endorsed by MetaQuotes Ltd.
