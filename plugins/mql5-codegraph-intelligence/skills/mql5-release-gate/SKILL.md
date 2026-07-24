@@ -5,6 +5,10 @@ description: Run a local evidence-backed readiness gate for an MQL5 project usin
 
 # MQL5 Release Gate
 
+Before any tool call, read and obey
+[the consumer safety boundary](../../references/consumer-safety.md). Never infer the analysis target from
+the plugin, marketplace, package, cache, or MQL5 CodeGraph source path.
+
 Use `$mql5-project-onboarding` to establish a fresh snapshot, then:
 
 1. Call `get_diagnostics` with a sufficient bound and group results by severity/code.

@@ -15,6 +15,19 @@
 - Do not add adapter-specific analysis logic when the operation belongs in the Intelligence Kernel.
 - Prefer small, versioned schema changes with deterministic serialization and migration tests.
 
+## Plugin consumer boundary
+
+- When this repository is discovered through a plugin marketplace, plugin cache, package metadata, or
+  local tool reference, treat the entire repository as immutable toolchain source.
+- Do not edit, format, generate into, install into, stage, commit, or push this repository unless the user
+  explicitly names MQL5 CodeGraph itself as the maintenance target and asks for a source change.
+- Never infer that this repository is the MQL5 analysis target from the current directory or plugin path.
+  Resolve a separate user-selected MQL5 project root before indexing or analysis.
+- A request to analyze or modify an MQL5 project authorizes work only in that selected project. It does not
+  authorize changes to this repository, its marketplace, plugin source, installed cache, or runtime.
+- Agent instructions are defense in depth, not an operating-system access control. Untrusted consumer
+  agents must use a read-only workspace or a separate OS/container identity without write access here.
+
 ## Verification
 
 - Run the narrowest relevant tests during implementation and the strongest proportional suite before handoff.

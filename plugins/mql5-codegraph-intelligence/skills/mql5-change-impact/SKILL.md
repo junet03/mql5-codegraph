@@ -5,6 +5,10 @@ description: Assess the blast radius and risk of changing MQL5 symbols with upst
 
 # MQL5 Change Impact
 
+Before any tool call, read and obey
+[the consumer safety boundary](../../references/consumer-safety.md). Never infer the analysis target from
+the plugin, marketplace, package, cache, or MQL5 CodeGraph source path.
+
 Start with `$mql5-project-onboarding` when snapshot freshness is uncertain.
 
 1. Resolve the target with `query_symbols`; never silently pick one ambiguous match.

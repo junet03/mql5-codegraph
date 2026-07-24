@@ -54,14 +54,18 @@ workflow skills and eight read-only MCP tools. It projects the same Intelligence
 not edit source, persist an index, or use the network.
 
 ```powershell
-python -m pip install -e ".[mcp]"
+uvx --from build pyproject-build
+python -m pip install "mcp>=1.28.1,<2"
+python -m pip install --force-reinstall --no-deps (Resolve-Path .\dist\mql5_codegraph-*.whl)
 codex plugin marketplace add D:\mql5-codegraph
 codex plugin add mql5-codegraph-intelligence@mql5-codegraph-internal
 ```
 
-Start a fresh Codex task after installation. The agent should call `project_status`, index an explicitly
-trusted local root when needed, and re-index after source changes. The plugin is an internal alpha, not a
-stable public MCP contract, and is not approved for hosted or untrusted-repository ingestion.
+The wheel install is intentionally non-editable so the MCP runtime does not import live code from this
+source checkout. Start a fresh Codex task in the actual MQL5 project, not in this plugin repository. The
+agent should call `project_status`, index an explicitly trusted project root when needed, and re-index
+after source changes. The plugin is an internal alpha, not a stable public MCP contract, and is not
+approved for hosted or untrusted-repository ingestion.
 
 See the [plugin quickstart](specs/004-mql5-agent-plugin/quickstart.md) for the complete local workflow.
 

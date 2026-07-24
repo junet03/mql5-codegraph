@@ -47,9 +47,14 @@ class PluginBundleTests(unittest.TestCase):
         self.assertEqual("MIT", manifest["license"])
         self.assertEqual("./skills/", manifest["skills"])
         self.assertEqual("./.mcp.json", manifest["mcpServers"])
+        self.assertEqual(["Read"], manifest["interface"]["capabilities"])
         server = mcp["mcpServers"]["mql5-codegraph"]
         self.assertEqual("mql5-codegraph-mcp", server["command"])
         self.assertEqual([], server["args"])
+        self.assertEqual(
+            {"PYTHONDONTWRITEBYTECODE": "1"},
+            server["env"],
+        )
         self.assertEqual(
             "mql5_codegraph.mcp.server:main",
             pyproject["project"]["scripts"]["mql5-codegraph-mcp"],
@@ -67,6 +72,40 @@ class PluginBundleTests(unittest.TestCase):
             frontmatter = content.split("---\n", 2)[1]
             self.assertIn(f"name: {name}\n", frontmatter)
             self.assertIn("description: ", frontmatter)
+
+    def test_consumer_policy_is_required_at_every_agent_entry_point(self) -> None:
+        policy_path = PLUGIN / "references" / "consumer-safety.md"
+        policy = policy_path.read_text(encoding="utf-8")
+        plugin_agents = (PLUGIN / "AGENTS.md").read_text(encoding="utf-8")
+        root_agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+        self.assertIn("immutable toolchain", policy)
+        self.assertIn("Do not apply patches", policy)
+        self.assertIn("read-only workspace", policy)
+        self.assertIn("immutable runtime material", plugin_agents)
+        self.assertIn("Plugin consumer boundary", root_agents)
+
+        for name in sorted(EXPECTED_SKILLS):
+            skill = (PLUGIN / "skills" / name / "SKILL.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn(
+                "../../references/consumer-safety.md",
+                skill,
+                name,
+            )
+
+    def test_consumer_quickstart_does_not_recommend_editable_runtime(self) -> None:
+        quickstart = (
+            ROOT / "specs" / "004-mql5-agent-plugin" / "quickstart.md"
+        ).read_text(encoding="utf-8")
+
+        consumer_section, maintainer_note = quickstart.split(
+            "An editable install", 1
+        )
+        self.assertNotIn("pip install -e", consumer_section)
+        self.assertIn("reserved for an explicit MQL5 CodeGraph", maintainer_note)
+        self.assertIn("Editable project location", quickstart)
 
     def test_repository_contains_the_declared_mit_license(self) -> None:
         pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))

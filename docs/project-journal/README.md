@@ -24,6 +24,7 @@ open risks, and the exact next objective so work can continue safely across sess
 | 2026-07-23 | [001 — Release and security gate](2026-07-23-001-release-security-gate.md) | Slow-drip, local transport, include containment, and dependency gates hardened | Define an analyzer work-budget contract |
 | 2026-07-23 | [002 — Private MCP plugin alpha](2026-07-23-002-private-mcp-plugin-alpha.md) | Private plugin, four skills, and eight-tool local MCP adapter verified | Pilot the plugin on one real private MQL5 repository |
 | 2026-07-23 | [003 — GitHub professionalization](2026-07-23-003-github-professionalization.md) | MIT/community/CI presentation and secure GitHub metadata established | Verify the hosted PR checks and protect `main` |
+| 2026-07-24 | [001 — Plugin consumer isolation](2026-07-24-001-plugin-consumer-isolation.md) | Consumer policy, regression gates, non-editable runtime, and cache-busted plugin established | Pilot from a separate MQL5 project under a read-only profile |
 
 ## Truth hierarchy
 

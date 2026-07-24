@@ -88,6 +88,8 @@ read-only tools.
 - A project is re-indexed after source changes while an earlier snapshot is still active.
 - The SDK dependency is absent or a future incompatible major version is installed.
 - Analysis is slow on a large repository; v0.1 has no analyzer-wide wall-clock budget.
+- A consumer task starts in the MQL5 CodeGraph source, marketplace, plugin cache, or package directory
+  instead of the intended MQL5 project.
 
 ## Requirements
 
@@ -116,6 +118,11 @@ read-only tools.
   exact tool discovery, structured results, error behavior, and kernel conformance.
 - **FR-014**: The adapter MUST document that hosted/untrusted ingestion, source mutation,
   MetaEditor control, persistent indexes, and a stable public MCP contract are out of scope.
+- **FR-015**: Every bundled workflow skill MUST load a common consumer safety policy that treats the
+  MQL5 CodeGraph source, marketplace, plugin source/cache, and runtime installation as immutable unless
+  the user explicitly requests MQL5 CodeGraph maintenance.
+- **FR-016**: Consumer installation guidance MUST use a non-editable package build and MUST reserve
+  editable installs for explicit maintainer sessions.
 
 ### Key Entities
 
@@ -139,6 +146,8 @@ read-only tools.
 - **SC-004**: Invalid indexing and pre-index query tests return stable codes and never crash the server.
 - **SC-005**: Plugin and skill validators complete successfully with no placeholders or missing paths.
 - **SC-006**: All existing Python, CLI, Web, frontend, package, and dependency gates continue to pass.
+- **SC-007**: Automated tests fail if the plugin loses its read-only capability declaration, common
+  consumer policy, skill policy references, or bytecode-write suppression.
 
 ## Assumptions
 

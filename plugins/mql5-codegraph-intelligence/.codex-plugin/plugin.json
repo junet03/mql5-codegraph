@@ -1,6 +1,6 @@
 {
   "name": "mql5-codegraph-intelligence",
-  "version": "0.1.0+codex.20260723151025",
+  "version": "0.1.0+codex.20260724032118",
   "description": "Evidence-backed local MQL5 project intelligence for internal Codex agents",
   "author": {
     "name": "MQL5 CodeGraph Contributors",

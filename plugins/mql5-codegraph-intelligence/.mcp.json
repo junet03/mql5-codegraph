@@ -2,7 +2,10 @@
   "mcpServers": {
     "mql5-codegraph": {
       "command": "mql5-codegraph-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
     }
   }
 }

@@ -5,6 +5,10 @@ description: Index and orient a trusted local MQL5 repository with the bundled M
 
 # MQL5 Project Onboarding
 
+Before any tool call, read and obey
+[the consumer safety boundary](../../references/consumer-safety.md). Never infer the analysis target from
+the plugin, marketplace, package, cache, or MQL5 CodeGraph source path.
+
 Use this workflow to establish a current evidence-backed snapshot before making project claims.
 
 1. Resolve the current repository root and read applicable `AGENTS.md` guidance.
