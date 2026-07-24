@@ -45,6 +45,7 @@ project while preserving the existing read-only MCP workflow.
 | Runtime isolation | `pip show` plus resolved module path | No editable project; import resolves from `C:\Python314\Lib\site-packages` |
 | MCP adapter after wheel install | `python -m unittest discover -s tests/mcp_adapter` | 9 passed in 3.300s |
 | Installed plugin | `codex plugin add` plus cached-file readback | Version `0.1.0+codex.20260724032118` installed and policy present |
+| Hosted CI | GitHub Actions run `30064297674` | All six jobs passed on commit `d324ad2` |
 | Directed project graph | `graphify update .` plus directed multigraph diagnostic | 1,650 nodes, 2,942 edges, 138 communities; no missing, dangling, self-loop, duplicate, or collapsed edges |
 
 ## Risks and unresolved questions
