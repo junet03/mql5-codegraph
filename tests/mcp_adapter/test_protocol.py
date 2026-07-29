@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from pathlib import Path
 from shutil import copy2, copytree
 import sys
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, TemporaryFile
 import unittest
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
+from mql5_codegraph.mcp.server import LIFECYCLE_PREFIX
 
 
 FIXTURE_ROOT = Path(__file__).parents[1] / "fixtures" / "basic_ea"
@@ -37,6 +40,14 @@ def _server_parameters() -> StdioServerParameters:
         cwd=project_root,
         env=environment,
     )
+
+
+def _lifecycle_events(raw: str) -> list[dict[str, object]]:
+    return [
+        json.loads(line.removeprefix(LIFECYCLE_PREFIX))
+        for line in raw.splitlines()
+        if line.startswith(LIFECYCLE_PREFIX)
+    ]
 
 
 async def _exercise_protocol() -> None:
@@ -124,12 +135,46 @@ async def _exercise_tool_error() -> None:
                 raise AssertionError(text)
 
 
+async def _exercise_idle_lifecycle() -> None:
+    idle_seconds = float(os.environ.get("MQL5_CODEGRAPH_MCP_IDLE_TEST_SECONDS", "0.25"))
+    parameters = _server_parameters()
+    with TemporaryFile(mode="w+", encoding="utf-8") as errlog:
+        async with stdio_client(parameters, errlog=errlog) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as client:
+                await client.initialize()
+                indexed = await client.call_tool(
+                    "index_project",
+                    {"root": str(FIXTURE_ROOT)},
+                )
+                if indexed.isError:
+                    raise AssertionError("index_project unexpectedly failed")
+                await asyncio.sleep(idle_seconds)
+                status = await client.call_tool("project_status", {})
+                if status.isError:
+                    raise AssertionError("project_status failed after idle")
+                if status.structuredContent["revision"] != indexed.structuredContent["revision"]:
+                    raise AssertionError(status.structuredContent)
+
+        errlog.seek(0)
+        events = _lifecycle_events(errlog.read())
+
+    event_names = [event["event"] for event in events]
+    if event_names != ["starting", "stopped"]:
+        raise AssertionError(events)
+    stopped = events[-1]
+    if stopped["reason"] != "stdio_eof" or stopped["exit_code"] != 0:
+        raise AssertionError(stopped)
+
+
 class McpProtocolTests(unittest.TestCase):
     def test_official_client_can_use_the_stdio_server(self) -> None:
         asyncio.run(_exercise_protocol())
 
     def test_adapter_error_is_a_tool_error_not_a_server_crash(self) -> None:
         asyncio.run(_exercise_tool_error())
+
+    def test_idle_session_survives_and_reports_clean_stdio_eof(self) -> None:
+        asyncio.run(_exercise_idle_lifecycle())
 
 
 if __name__ == "__main__":

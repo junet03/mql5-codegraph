@@ -88,6 +88,7 @@ read-only tools.
 - A project is re-indexed after source changes while an earlier snapshot is still active.
 - The SDK dependency is absent or a future incompatible major version is installed.
 - Analysis is slow on a large repository; v0.1 has no analyzer-wide wall-clock budget.
+- The MCP host closes stdin, externally ends the child, or retains a dead transport without respawning.
 - A consumer task starts in the MQL5 CodeGraph source, marketplace, plugin cache, or package directory
   instead of the intended MQL5 project.
 
@@ -123,6 +124,8 @@ read-only tools.
   the user explicitly requests MQL5 CodeGraph maintenance.
 - **FR-016**: Consumer installation guidance MUST use a non-editable package build and MUST reserve
   editable installs for explicit maintainer sessions.
+- **FR-017**: The stdio entry point MUST emit bounded lifecycle evidence to stderr for startup, clean EOF,
+  and unhandled failure without writing non-protocol content to stdout or exposing project data.
 
 ### Key Entities
 
@@ -148,6 +151,8 @@ read-only tools.
 - **SC-006**: All existing Python, CLI, Web, frontend, package, and dependency gates continue to pass.
 - **SC-007**: Automated tests fail if the plugin loses its read-only capability declaration, common
   consumer policy, skill policy references, or bytecode-write suppression.
+- **SC-008**: An official-client regression keeps an indexed snapshot across a configurable idle interval,
+  observes clean EOF telemetry on shutdown, and a unit regression observes unhandled-failure telemetry.
 
 ## Assumptions
 

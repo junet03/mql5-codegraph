@@ -63,3 +63,18 @@ All v0.1 tools advertise:
 `index_project` is read-only with respect to external state: it reads local files and replaces only
 the server process's in-memory snapshot. `correlate_compiler_log` reads a bounded supplied log and current
 source identity without mutating the filesystem, graph, or snapshot.
+
+## Transport lifecycle
+
+The entry point writes one-line JSON lifecycle records to stderr with prefix
+`mql5-codegraph-mcp.lifecycle `. Records contain only schema version, timestamp, event, PID/parent PID,
+server/transport name, Python/package/SDK versions, and a bounded reason/exception type. They never contain
+project roots, tool arguments, graph data, source, compiler logs, credentials, or environment values.
+
+- `starting`: emitted before the FastMCP stdio run loop.
+- `stopped` / `stdio_eof`: emitted when the run loop returns after host input closes.
+- `crashed` / `unhandled_exception`: emitted before an unhandled server exception is re-raised.
+
+Lifecycle records are diagnostic evidence, not MCP tool results. The server cannot repair a client that
+already holds a dead transport. The host must spawn and initialize a new process; callers must then treat
+the old in-memory snapshot as lost and re-index explicitly.

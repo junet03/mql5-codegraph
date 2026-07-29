@@ -64,6 +64,13 @@ errors, removed fields, or incompatible behavior require a new major and a new `
 The private MCP tool names are not part of the stable compatibility promise. Its official SDK dependency
 is optional and capped below 2.x so a major protocol-runtime migration remains deliberate.
 
+The stdio entry point writes machine-readable lifecycle events to stderr, never stdout. `starting`
+identifies the process/runtime versions, `stopped` with `stdio_eof` identifies a clean host-side stdin
+closure, and `crashed` identifies an unhandled server exception. If a `starting` record has no matching
+terminal event, the available evidence supports external termination rather than a server-classified
+shutdown. Respawning and reinitializing a dead child transport remain responsibilities of the MCP host;
+any new server process begins without the prior in-memory snapshot.
+
 ## Evidence and uncertainty
 
 Every relationship, path hop, and diagnostic result retains an `EvidenceReference` with origin,

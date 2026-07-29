@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
+import json
+import os
+import sys
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -12,6 +17,7 @@ from .service import AdapterError, ProjectSession
 
 
 SERVER_NAME = "mql5-codegraph-intelligence"
+LIFECYCLE_PREFIX = "mql5-codegraph-mcp.lifecycle "
 SERVER_INSTRUCTIONS = (
     "Local, read-only MQL5 project intelligence. Call project_status first. "
     "Call index_project only for a trusted absolute local project root, then "
@@ -26,6 +32,43 @@ READ_ONLY_ANNOTATIONS = ToolAnnotations(
     idempotentHint=True,
     openWorldHint=False,
 )
+
+
+def _distribution_version(name: str) -> str:
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return "source"
+    except Exception:
+        return "unknown"
+
+
+def _emit_lifecycle(event: str, **details: object) -> None:
+    payload = {
+        "schema_version": 1,
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "event": event,
+        "server": SERVER_NAME,
+        "transport": "stdio",
+        "pid": os.getpid(),
+        "parent_pid": os.getppid(),
+        "package_version": _distribution_version("mql5-codegraph"),
+        "mcp_sdk_version": _distribution_version("mcp"),
+        "python_version": (
+            f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        ),
+        **details,
+    }
+    try:
+        sys.stderr.write(
+            LIFECYCLE_PREFIX
+            + json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+            + "\n"
+        )
+        sys.stderr.flush()
+    except (OSError, ValueError):
+        # Telemetry must never become a new failure mode for the MCP transport.
+        pass
 
 
 def _call(method, /, *args, **kwargs) -> dict[str, Any]:
@@ -256,7 +299,38 @@ def create_server(session: ProjectSession | None = None) -> FastMCP:
 def main() -> None:
     """Run the bundled local server over MCP stdio."""
 
-    create_server().run(transport="stdio")
+    _emit_lifecycle("starting")
+    try:
+        create_server().run(transport="stdio")
+    except KeyboardInterrupt:
+        _emit_lifecycle(
+            "stopped",
+            reason="keyboard_interrupt",
+            exit_code=130,
+        )
+        raise
+    except SystemExit as error:
+        exit_code = error.code if isinstance(error.code, int) else 1
+        _emit_lifecycle(
+            "stopped" if exit_code == 0 else "crashed",
+            reason="system_exit",
+            exit_code=exit_code,
+        )
+        raise
+    except BaseException as error:
+        _emit_lifecycle(
+            "crashed",
+            reason="unhandled_exception",
+            exception_type=type(error).__name__,
+            exit_code=1,
+        )
+        raise
+    else:
+        _emit_lifecycle(
+            "stopped",
+            reason="stdio_eof",
+            exit_code=0,
+        )
 
 
 if __name__ == "__main__":

@@ -22,6 +22,21 @@ mql5-codegraph-mcp
 ```
 
 The command uses stdio and is normally launched by Codex; it does not print user-facing logs to stdout.
+It emits bounded `mql5-codegraph-mcp.lifecycle` JSON records to stderr for startup, clean stdin EOF, and
+unhandled failure.
+
+For a configurable idle regression (30 minutes shown):
+
+```powershell
+$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+$env:MQL5_CODEGRAPH_MCP_IDLE_TEST_SECONDS = '1800'
+python -m unittest tests.mcp_adapter.test_protocol.McpProtocolTests.test_idle_session_survives_and_reports_clean_stdio_eof
+Remove-Item Env:\MQL5_CODEGRAPH_MCP_IDLE_TEST_SECONDS
+```
+
+This proves the server remains live while its client transport remains open. It does not prove that Codex
+Desktop will respawn a child process it has externally ended. If a task reports `Transport closed`, reload
+the task/app MCP host and re-index; retrying the same dead transport cannot restore the in-memory snapshot.
 
 ## Install the repo marketplace
 
@@ -62,6 +77,11 @@ On 2026-07-29, the non-editable wheel was refreshed after compiler-evidence adde
 MetaEditor-log support. The official installed MCP stdio client discovered the nine-tool surface, including
 `correlate_compiler_log`, and returned `current` / `success` for the isolated supported log fixture.
 Codex installed plugin version `0.1.0+codex.20260729212553`.
+
+On 2026-07-30, transport-lifecycle telemetry and idle/crash regressions were added after a Codex Desktop
+task retained a dead stdio client without respawning its child. The server-side evidence now distinguishes
+clean EOF and unhandled failure; Codex host-side respawn remains outside this repository. Codex installed
+plugin version `0.1.0+codex.20260730002910`.
 
 The original alpha evidence and consumer-isolation evidence are recorded in
 `docs/project-journal/2026-07-23-002-private-mcp-plugin-alpha.md` and

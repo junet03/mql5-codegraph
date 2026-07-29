@@ -68,6 +68,11 @@ agent should call `project_status`, index an explicitly trusted project root whe
 after source changes. The plugin is an internal alpha, not a stable public MCP contract, and is not
 approved for hosted or untrusted-repository ingestion.
 
+The MCP entry point emits bounded JSON lifecycle records to stderr only. These distinguish startup,
+clean stdio EOF, and unhandled server failure without exposing project roots or source. If Codex reports
+`Transport closed`, restart the task/app transport and re-index; an in-memory snapshot cannot survive its
+own server process.
+
 ## Analysis work limit
 
 Every source analysis has a deterministic work budget covering discovery, lexing, parsing, resolution,

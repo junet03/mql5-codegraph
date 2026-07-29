@@ -21,3 +21,14 @@ During a plugin workflow:
    for a source change.
 5. Do not claim that these instructions are a hard filesystem lock. Use a read-only workspace or a
    separate OS/container identity when consumer agents are not trusted with write access.
+
+## Transport recovery
+
+- Treat `Transport closed` as an MCP host/channel failure, not as a project diagnostic or evidence that
+  indexing failed.
+- Do not repeatedly call a known-dead transport. Start a fresh task or reload the Codex MCP host, then call
+  `project_status`.
+- A restarted server has no prior in-memory snapshot. If status is `not_indexed`, call `index_project`
+  again with the explicit trusted root and include roots before making project claims.
+- Runtime/package refresh is a maintenance-window action. Stopping a live `mql5-codegraph-mcp` process
+  closes every task transport attached to that process.

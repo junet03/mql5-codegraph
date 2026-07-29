@@ -51,6 +51,9 @@ compiler artifacts, or claim compiler/runtime parity.
 - The private MCP plugin inherits this local trusted-input boundary. It keeps one in-memory snapshot and
   exposes bounded Intelligence Kernel operations plus a bounded initial analysis operation. Hosted or
   multi-user ingestion remains out of scope pending broader resource, tenancy, and security design.
+- The stdio server reports bounded lifecycle evidence to stderr, but it cannot respawn itself after its
+  host transport or process is gone. A host-side `Transport closed` recovery requires a new MCP process,
+  initialization, and re-index; the prior in-memory snapshot is intentionally not restored.
 - Compiler correlation accepts only a <=2 MiB log explicitly supplied under the selected trusted root. It
   supports UTF-8 and BOM-marked UTF-16 logs with the documented English
   `Result: <errors> errors, <warnings> warnings` summary and bounded error/warning records; unsupported

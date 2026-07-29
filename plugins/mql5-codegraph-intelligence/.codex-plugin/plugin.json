@@ -1,6 +1,6 @@
 {
   "name": "mql5-codegraph-intelligence",
-  "version": "0.1.0+codex.20260729212553",
+  "version": "0.1.0+codex.20260730002910",
   "description": "Evidence-backed local MQL5 intelligence with bounded compiler-log correlation",
   "author": {
     "name": "MQL5 CodeGraph Contributors",

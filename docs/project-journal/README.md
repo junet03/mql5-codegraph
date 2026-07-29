@@ -29,6 +29,7 @@ open risks, and the exact next objective so work can continue safely across sess
 | 2026-07-29 | [002 — Compiler evidence correlation](2026-07-29-002-compiler-evidence-correlation.md) | Bounded supplied compiler logs now correlate with static evidence through CLI and MCP | Pilot a real trusted-project MetaEditor log |
 | 2026-07-29 | [003 — Plugin runtime refresh](2026-07-29-003-plugin-runtime-refresh.md) | Non-editable wheel and cache-busted nine-tool plugin runtime installed and verified | Run a trusted-project compiler-evidence pilot |
 | 2026-07-29 | [004 — UTF-16 compiler-log support and DCA dashboard pilot](2026-07-29-004-utf16-compiler-log-support.md) | BOM-marked UTF-16 logs correlate through the installed plugin; DCA dashboard is live locally | Review code-89 warnings and run an operator-controlled runtime check |
+| 2026-07-30 | [001 — MCP transport lifecycle evidence](2026-07-30-001-mcp-transport-lifecycle.md) | MCP exits are attributable, idle continuity is covered, and the non-editable runtime/plugin are deployed | Run a 30-minute Codex host idle/resume soak |
 
 ## Truth hierarchy
 
