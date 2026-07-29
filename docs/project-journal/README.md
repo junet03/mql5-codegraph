@@ -25,6 +25,10 @@ open risks, and the exact next objective so work can continue safely across sess
 | 2026-07-23 | [002 — Private MCP plugin alpha](2026-07-23-002-private-mcp-plugin-alpha.md) | Private plugin, four skills, and eight-tool local MCP adapter verified | Pilot the plugin on one real private MQL5 repository |
 | 2026-07-23 | [003 — GitHub professionalization](2026-07-23-003-github-professionalization.md) | MIT/community/CI presentation and secure GitHub metadata established | Verify the hosted PR checks and protect `main` |
 | 2026-07-24 | [001 — Plugin consumer isolation](2026-07-24-001-plugin-consumer-isolation.md) | Consumer policy, regression gates, non-editable runtime, and cache-busted plugin established | Pilot from a separate MQL5 project under a read-only profile |
+| 2026-07-29 | [001 — Analyzer work-budget implementation](2026-07-29-001-analysis-work-budget.md) | Canonical analysis is bounded across all local entry points without partial publication | Design compiler correlation against a local MetaEditor fixture |
+| 2026-07-29 | [002 — Compiler evidence correlation](2026-07-29-002-compiler-evidence-correlation.md) | Bounded supplied compiler logs now correlate with static evidence through CLI and MCP | Pilot a real trusted-project MetaEditor log |
+| 2026-07-29 | [003 — Plugin runtime refresh](2026-07-29-003-plugin-runtime-refresh.md) | Non-editable wheel and cache-busted nine-tool plugin runtime installed and verified | Run a trusted-project compiler-evidence pilot |
+| 2026-07-29 | [004 — UTF-16 compiler-log support and DCA dashboard pilot](2026-07-29-004-utf16-compiler-log-support.md) | BOM-marked UTF-16 logs correlate through the installed plugin; DCA dashboard is live locally | Review code-89 warnings and run an operator-controlled runtime check |
 
 ## Truth hierarchy
 

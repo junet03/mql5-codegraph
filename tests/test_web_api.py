@@ -15,7 +15,11 @@ from mql5_codegraph.indexer import analyze_repository
 from mql5_codegraph.intelligence import IntelligenceError
 from mql5_codegraph.intelligence import paths as path_module
 from mql5_codegraph.web.api import ApiError, DashboardApi
-from mql5_codegraph.web.server import DashboardThreadingHTTPServer, create_server
+from mql5_codegraph.web.server import (
+    DashboardThreadingHTTPServer,
+    create_server,
+    serve_dashboard,
+)
 from mql5_codegraph.web.state import DashboardState
 from tests.intelligence.helpers import build_graph, make_edge, make_node
 
@@ -87,6 +91,13 @@ class DashboardApiTests(TestCase):
         with self.assertRaises(ApiError) as depth:
             self.api.context({"symbol": ["OnTick"], "depth": ["99"]})
         self.assertEqual("invalid_parameter", depth.exception.code)
+
+    def test_analyze_rejects_invalid_work_budget(self) -> None:
+        with self.assertRaises(ApiError) as raised:
+            self.api.analyze({"root": str(FIXTURE), "max_work": 0})
+
+        self.assertEqual(400, raised.exception.status)
+        self.assertEqual("invalid_max_work", raised.exception.code)
 
     def test_normalized_path_projects_defaults_and_evidence(self) -> None:
         source = make_node("OnTick", node_id="node:on-tick")
@@ -183,6 +194,10 @@ class DashboardApiTests(TestCase):
 
 
 class DashboardHttpTests(TestCase):
+    def test_dashboard_startup_rejects_an_invalid_work_limit(self) -> None:
+        with self.assertRaisesRegex(ValueError, "max_work must be an integer"):
+            serve_dashboard(max_work=0, open_browser=False)
+
     def test_server_rejects_non_loopback_bind_and_request_authorities(self) -> None:
         state = DashboardState()
         with self.assertRaisesRegex(ValueError, "loopback"):

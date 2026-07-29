@@ -3,7 +3,7 @@
 The pipeline is intentionally layered:
 
 ```text
-source discovery -> lexer -> structural parser -> repository resolver
+AnalysisBudget -> source discovery -> lexer -> structural parser -> repository resolver
                  -> MQL5 runtime enrichment -> canonical CodeGraph
                  -> immutable GraphIndex -> IntelligenceKernel
                                          -> CLI/Web/private MCP adapters
@@ -37,6 +37,14 @@ kernel, repository root, and revision, so a request cannot mix snapshots during 
 Analysis semantics must not be implemented in CLI, Web, or the MCP adapter. Adapters may normalize
 transport-derived defaults, map HTTP status or CLI exit codes, and preserve legacy projections.
 
+## Analysis work budget
+
+Each graph construction owns one deterministic `AnalysisBudget`. It is consumed across discovery,
+lexing, parsing, resolution, and runtime enrichment; exhaustion returns no graph. The default is
+1,000,000 units, and a local operator may explicitly request 1 through 10,000,000 for one analysis.
+This is a logical-work boundary, not a wall-clock guarantee. CLI never writes a partial graph, while
+dashboard and MCP publish replacements only after the full analysis succeeds.
+
 ## Adapter and compatibility matrix
 
 | Surface | Contract | Role |
@@ -44,7 +52,8 @@ transport-derived defaults, map HTTP status or CLI exit codes, and preserve lega
 | Direct Python | Intelligence contract `1.0.0` | Authoritative normalized result |
 | `intelligence` CLI namespace | Intelligence contract `1.0.0` | Argument normalization and JSON/error projection |
 | `/api/v1/intelligence/*` | Intelligence contract `1.0.0` | Route defaults, HTTP status, JSON projection |
-| Private MCP stdio alpha | Experimental eight-tool projection | One trusted in-memory snapshot and structured tool errors |
+| `compiler-evidence` CLI | Compiler evidence contract `1.0.0` | Read-only correlation of a supplied log with a saved graph |
+| Private MCP stdio alpha | Experimental nine-tool projection | One trusted in-memory snapshot and structured tool errors |
 | Legacy CLI and unversioned HTTP | Frozen historical shapes | Exact compatibility projector over the same snapshot |
 | GraphML and representation exporters | Canonical graph schema | Transform representation without reinterpreting semantics |
 
@@ -68,6 +77,15 @@ confidence, source location when known, and an explicit state:
 Freshness state is separately `available`, `stale`, `unavailable`, or `unknown`. Locationless evidence is
 always unknown. Without a protected evidence probe, a stored source location remains unknown rather than
 being promoted to available.
+
+## Compiler evidence
+
+Compiler evidence is a separate, immutable result that pairs an operator-supplied bounded MetaEditor log
+with one graph identity and a fresh source observation. It records `current`, `stale`, or `incomplete`
+state independently of static graph diagnostics. A compiler finding may identify a graph declaration only
+when its project-contained file and line exactly match that declaration; text resembling a symbol name is
+never enough. The core does not launch MetaEditor, persist a log, add edges or diagnostics to `CodeGraph`,
+or claim that a successful compile proves terminal or trading behavior.
 
 ## Structural context packages
 

@@ -9,6 +9,7 @@ MCP contract is declared.
 | --- | --- | --- |
 | `project_status` | none | Return active snapshot state and identity without indexing |
 | `index_project` | `root` | Build and publish an in-memory snapshot of a trusted local project |
+| `correlate_compiler_log` | `log_path`, `entry_file` | Correlate a supplied bounded MetaEditor log with the active snapshot |
 | `query_symbols` | `target` | Resolve exact, qualified, normalized, or ambiguous symbol matches |
 | `get_context` | `target` | Return bounded incoming/outgoing/both neighborhood evidence |
 | `get_impact` | `target` | Return bounded upstream impact evidence |
@@ -28,12 +29,21 @@ MCP contract is declared.
 - `context_units`: 1 to 10000.
 - `expected_source_fingerprint`: optional stale-snapshot guard.
 
-`index_project` additionally accepts `include_roots` and `excluded` arrays.
+`index_project` additionally accepts `include_roots` and `excluded` arrays plus optional `max_work`.
+When omitted, source analysis uses 1,000,000 deterministic work units; values from 1 through 10,000,000
+are valid. Exhaustion returns `analysis_budget_exceeded` with `phase`, `work_used`, and `work_limit` and
+does not replace an active snapshot.
+
+`correlate_compiler_log` uses the active snapshot's root and exclusions. Both paths must resolve inside
+that trusted root; it never launches MetaEditor, writes compiler artifacts, or changes the snapshot. Its
+separate compiler-evidence envelope is specified in
+[`specs/006-compiler-correlation/contracts/compiler-evidence-v1.md`](../../006-compiler-correlation/contracts/compiler-evidence-v1.md).
 
 ## Result envelope
 
 Successful intelligence tools return the exact `IntelligenceResult.to_dict()` object. Status and
-index tools return adapter-owned deterministic objects. MCP structured output is authoritative; a
+index tools return adapter-owned deterministic objects. Compiler correlation returns its versioned
+compiler-evidence envelope. MCP structured output is authoritative; a
 JSON text block is retained by the SDK for older clients.
 
 ## Errors
@@ -51,4 +61,5 @@ All v0.1 tools advertise:
 - `openWorldHint = false`
 
 `index_project` is read-only with respect to external state: it reads local files and replaces only
-the server process's in-memory snapshot.
+the server process's in-memory snapshot. `correlate_compiler_log` reads a bounded supplied log and current
+source identity without mutating the filesystem, graph, or snapshot.

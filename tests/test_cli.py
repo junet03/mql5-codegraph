@@ -2,11 +2,14 @@ import contextlib
 from hashlib import sha256
 import io
 import json
+import os
 from pathlib import Path
+from shutil import copy2, copytree
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from xml.etree import ElementTree as ET
 
+from mql5_codegraph.analysis_budget import AnalysisBudgetExceeded
 from mql5_codegraph.cli import run
 from mql5_codegraph.graph import SourceLocation
 
@@ -182,6 +185,128 @@ class CliTests(TestCase):
             canonical_ids = {item["id"] for item in json.loads(graph_path.read_text(encoding="utf-8"))["nodes"]}
             graphml_ids = {element.attrib["id"] for element in root.iter() if element.tag.endswith("node")}
             self.assertEqual(canonical_ids, graphml_ids)
+
+    def test_analyze_reports_budget_exhaustion_without_writing_output(self) -> None:
+        with TemporaryDirectory() as directory:
+            graph_path = Path(directory) / "budget-exhausted.json"
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                exit_code = run(
+                    [
+                        "analyze",
+                        str(FIXTURE),
+                        "--output",
+                        str(graph_path),
+                        "--max-work",
+                        "1",
+                        "--json",
+                    ]
+                )
+
+            self.assertEqual(1, exit_code)
+            self.assertEqual("", stdout.getvalue())
+            self.assertFalse(graph_path.exists())
+            error = json.loads(stderr.getvalue())["error"]
+            self.assertEqual(AnalysisBudgetExceeded.code, error["code"])
+            self.assertEqual("source_discovery", error["details"]["phase"])
+
+    def test_analyze_rejects_an_invalid_max_work_before_indexing(self) -> None:
+        with TemporaryDirectory() as directory:
+            graph_path = Path(directory) / "invalid-budget.json"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                exit_code = run(
+                    [
+                        "analyze",
+                        str(FIXTURE),
+                        "--output",
+                        str(graph_path),
+                        "--max-work",
+                        "0",
+                        "--json",
+                    ]
+                )
+
+            self.assertEqual(1, exit_code)
+            self.assertFalse(graph_path.exists())
+            error = json.loads(stderr.getvalue())["error"]
+            self.assertEqual("invalid_parameter", error["code"])
+            self.assertEqual("max_work", error["field"])
+
+    def test_serve_rejects_an_invalid_max_work_before_starting(self) -> None:
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            exit_code = run(["serve", "--max-work", "0", "--no-browser"])
+
+        self.assertEqual(1, exit_code)
+        self.assertIn("max_work must be an integer", stderr.getvalue())
+
+    def test_compiler_evidence_reports_current_log_without_mutating_inputs(self) -> None:
+        compiler_log = Path(__file__).parent / "fixtures" / "compiler_logs" / "basic-success.log"
+        with TemporaryDirectory() as directory:
+            root = Path(directory) / "basic_ea"
+            copytree(FIXTURE, root)
+            log_path = root / "compiler.log"
+            copy2(compiler_log, log_path)
+            for source in root.rglob("*"):
+                if source.suffix.lower() in {".mq5", ".mqh"}:
+                    os.utime(source, ns=(1_000_000_000, 1_000_000_000))
+            os.utime(log_path, ns=(2_000_000_000, 2_000_000_000))
+            graph_path = Path(directory) / "graph.json"
+            before = {
+                path.relative_to(root).as_posix(): path.read_bytes()
+                for path in root.rglob("*")
+                if path.is_file()
+            }
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0, run(["analyze", str(root), "--output", str(graph_path), "--json"]))
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = run(
+                    [
+                        "compiler-evidence",
+                        str(graph_path),
+                        "--entry",
+                        "BasicEA.mq5",
+                        "--log",
+                        "compiler.log",
+                        "--json",
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            result = json.loads(stdout.getvalue())
+            self.assertEqual("current", result["compiler_evidence"]["evidence_state"])
+            self.assertEqual("success", result["compiler_evidence"]["outcome"])
+            outside_log = Path(directory) / "outside.log"
+            outside_log.write_text("Result: 0 errors, 0 warnings", encoding="utf-8")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                invalid_exit = run(
+                    [
+                        "compiler-evidence",
+                        str(graph_path),
+                        "--entry",
+                        "BasicEA.mq5",
+                        "--log",
+                        str(outside_log),
+                        "--json",
+                    ]
+                )
+            self.assertEqual(1, invalid_exit)
+            self.assertEqual(
+                "compiler_log_outside_root",
+                json.loads(stderr.getvalue())["error"]["code"],
+            )
+            self.assertEqual(
+                before,
+                {
+                    path.relative_to(root).as_posix(): path.read_bytes()
+                    for path in root.rglob("*")
+                    if path.is_file()
+                },
+            )
 
     def test_legacy_contract_golden_bytes(self) -> None:
         contract = json.loads(

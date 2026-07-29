@@ -1,6 +1,12 @@
 from pathlib import Path
 from unittest import TestCase
 
+from mql5_codegraph.analysis_budget import (
+    MAX_MAX_WORK,
+    AnalysisBudget,
+    AnalysisBudgetExceeded,
+)
+from mql5_codegraph.lexer import tokenize
 from mql5_codegraph.parser import parse_source
 
 
@@ -71,3 +77,21 @@ void OnTick()
         parsed = parse_source(source, "Malformed.mqh")
         self.assertTrue(parsed.diagnostics)
         self.assertIn("Recoverable", {item.name for item in parsed.declarations})
+
+    def test_nested_argument_parsing_obeys_the_shared_work_budget(self) -> None:
+        source = "void OnTick() { Calculate(A(B(1, 2), C(3, 4)), D(5)); }"
+        lexing = AnalysisBudget(MAX_MAX_WORK)
+        tokenize(source, "Budget.mq5", budget=lexing)
+
+        with self.assertRaises(AnalysisBudgetExceeded) as raised:
+            parse_source(
+                source,
+                "Budget.mq5",
+                budget=AnalysisBudget(lexing.work_used + 1),
+            )
+
+        self.assertEqual("parsing", raised.exception.phase)
+        self.assertLessEqual(
+            raised.exception.work_used,
+            raised.exception.work_limit,
+        )

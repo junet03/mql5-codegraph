@@ -14,6 +14,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 import webbrowser
 
+from ..analysis_budget import AnalysisBudget
 from ..graph import CodeGraph
 from ..intelligence import IntelligenceError
 from .api import ApiError, DashboardApi
@@ -288,16 +289,18 @@ def create_server(
 def serve_dashboard(
     host: str = "127.0.0.1", port: int = 8765, root: str | Path | None = None,
     graph_path: str | Path | None = None, include_roots: list[str] | None = None,
+    max_work: int | None = None,
     open_browser: bool = True,
 ) -> None:
     if not 0 <= port <= 65535:
         raise ValueError("port must be between 0 and 65535")
+    AnalysisBudget(max_work)
     state = DashboardState()
     if graph_path:
         graph = CodeGraph.load(graph_path)
         state.load_graph(graph, root)
     if root and not graph_path:
-        state.start_analysis(root, include_roots or [])
+        state.start_analysis(root, include_roots or [], max_work=max_work)
     server = create_server(state, host, port)
     actual_host, actual_port = server.server_address[:2]
     display_host = f"[{actual_host}]" if ":" in actual_host else actual_host

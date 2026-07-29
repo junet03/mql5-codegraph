@@ -67,6 +67,21 @@ class DashboardStateTests(TestCase):
         self.assertEqual(version, current_version)
         self.assertEqual("synthetic failure", state.status()["last_error"])
 
+    def test_budget_exhaustion_keeps_previous_graph(self) -> None:
+        state = DashboardState()
+        completed = wait_for_job(state, state.start_analysis(FIXTURE).id)
+        original, _, version = state.snapshot()
+
+        exhausted = wait_for_job(state, state.start_analysis(FIXTURE, max_work=1).id)
+        current, _, current_version = state.snapshot()
+
+        self.assertEqual("completed", completed.status)
+        self.assertEqual("failed", exhausted.status)
+        self.assertEqual("analysis_budget_exceeded", exhausted.error_code)
+        self.assertEqual("source_discovery", exhausted.error_details["phase"])
+        self.assertIs(original, current)
+        self.assertEqual(version, current_version)
+
     def test_graph_and_kernel_snapshots_are_published_as_one_revision(self) -> None:
         first_graph = CodeGraph({"source_fingerprint": "first"})
         second_graph = CodeGraph({"source_fingerprint": "second"})

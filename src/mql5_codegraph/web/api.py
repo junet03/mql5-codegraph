@@ -6,6 +6,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from ..analysis_budget import AnalysisBudget
 from ..intelligence import IntelligenceError
 from .state import DashboardState
 
@@ -108,12 +109,21 @@ class DashboardApi:
             raise ApiError(400, "invalid_body", "Request body must be a JSON object")
         root = payload.get("root")
         include_roots = payload.get("include_roots", [])
+        max_work = payload.get("max_work")
         if not isinstance(root, str) or not root.strip():
             raise ApiError(400, "invalid_root", "root must be a non-empty directory path")
         if not isinstance(include_roots, list) or not all(isinstance(path, str) for path in include_roots):
             raise ApiError(400, "invalid_include_roots", "include_roots must be an array of paths")
         try:
-            job = self.state.start_analysis(root.strip(), include_roots)
+            AnalysisBudget(max_work)
+        except ValueError as error:
+            raise ApiError(400, "invalid_max_work", str(error)) from error
+        try:
+            job = self.state.start_analysis(
+                root.strip(),
+                include_roots,
+                max_work=max_work,
+            )
         except ValueError as error:
             raise ApiError(400, "invalid_root", str(error)) from error
         except RuntimeError as error:

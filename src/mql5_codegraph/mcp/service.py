@@ -8,6 +8,12 @@ from pathlib import Path
 from threading import Lock, RLock
 from typing import Any, Iterable
 
+from ..analysis_budget import AnalysisBudget, AnalysisBudgetExceeded
+from ..compiler_evidence import (
+    CompilerEvidenceError,
+    correlate_compiler_log,
+    correlation_result,
+)
 from ..graph import CodeGraph
 from ..indexer import analyze_repository
 from ..intelligence import CONTRACT_VERSION, IntelligenceError, IntelligenceKernel
@@ -130,6 +136,20 @@ class ProjectSession:
         return tuple(sorted(normalized, key=str.casefold))
 
     @staticmethod
+    def _normalize_max_work(max_work: int | None) -> int | None:
+        if max_work is None:
+            return None
+        try:
+            AnalysisBudget(max_work)
+        except ValueError as error:
+            raise AdapterError(
+                "invalid_tool_arguments",
+                str(error),
+                {"field": "max_work"},
+            ) from error
+        return max_work
+
+    @staticmethod
     def _status(snapshot: ProjectSnapshot) -> dict[str, Any]:
         return {
             "status": "indexed",
@@ -158,10 +178,13 @@ class ProjectSession:
         root: str,
         include_roots: Iterable[str] = (),
         excluded: Iterable[str] = (),
+        *,
+        max_work: int | None = None,
     ) -> dict[str, Any]:
         normalized_root = self._normalize_root(root)
         normalized_includes = self._normalize_include_roots(include_roots)
         normalized_excluded = self._normalize_excluded(excluded)
+        normalized_max_work = self._normalize_max_work(max_work)
 
         with self._index_lock:
             try:
@@ -169,7 +192,14 @@ class ProjectSession:
                     normalized_root,
                     normalized_includes,
                     normalized_excluded,
+                    max_work=normalized_max_work,
                 )
+            except AnalysisBudgetExceeded as error:
+                raise AdapterError(
+                    error.code,
+                    error.message,
+                    error.to_dict()["details"],
+                ) from error
             except (OSError, ValueError) as error:
                 raise AdapterError(
                     "analysis_failed",
@@ -403,3 +433,28 @@ class ProjectSession:
             max_items=max_items,
             expected_source_fingerprint=expected_source_fingerprint,
         )
+
+    def correlate_compiler_log(
+        self,
+        log_path: str,
+        entry_file: str,
+    ) -> dict[str, Any]:
+        """Return external compiler evidence for the active immutable snapshot."""
+
+        snapshot = self._active_snapshot()
+        try:
+            report = correlate_compiler_log(
+                snapshot.graph,
+                snapshot.root,
+                log_path,
+                entry_file,
+                excluded=snapshot.excluded,
+            )
+        except CompilerEvidenceError as error:
+            raise AdapterError(error.code, error.message) from error
+        except (OSError, ValueError) as error:
+            raise AdapterError(
+                "compiler_correlation_failed",
+                "Compiler evidence correlation failed",
+            ) from error
+        return correlation_result(report, snapshot.kernel.graph_identity)

@@ -1,7 +1,7 @@
 {
   "name": "mql5-codegraph-intelligence",
-  "version": "0.1.0+codex.20260724032118",
-  "description": "Evidence-backed local MQL5 project intelligence for internal Codex agents",
+  "version": "0.1.0+codex.20260729212553",
+  "description": "Evidence-backed local MQL5 intelligence with bounded compiler-log correlation",
   "author": {
     "name": "MQL5 CodeGraph Contributors",
     "url": "https://github.com/junet03/mql5-codegraph"
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "MQL5 CodeGraph Intelligence",
     "shortDescription": "Navigate MQL5 projects with evidence-backed graph tools.",
-    "longDescription": "Index trusted local MQL5 repositories in memory, query symbols and relationships, trace impact and paths, and assemble bounded AI context without modifying source files.",
+    "longDescription": "Index trusted local MQL5 repositories in memory, query symbols and relationships, trace impact and paths, correlate bounded compiler logs, and assemble AI context without modifying source files.",
     "developerName": "MQL5 CodeGraph Contributors",
     "category": "Developer Tools",
     "capabilities": [
@@ -28,6 +28,7 @@
     "defaultPrompt": [
       "Index this MQL5 project and explain its architecture.",
       "Trace the impact of changing this MQL5 symbol.",
+      "Correlate this project's supplied MetaEditor compiler log.",
       "Run the MQL5 static-analysis release gate."
     ]
   },

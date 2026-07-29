@@ -70,13 +70,30 @@ def create_server(session: ProjectSession | None = None) -> FastMCP:
         root: str,
         include_roots: list[str] | None = None,
         excluded: list[str] | None = None,
+        max_work: int | None = None,
     ) -> dict[str, Any]:
         return _call(
             project.index_project,
             root,
             include_roots or (),
             excluded or (),
+            max_work=max_work,
         )
+
+    @server.tool(
+        name="correlate_compiler_log",
+        description=(
+            "Correlate an explicitly supplied bounded local MetaEditor compiler log "
+            "with the active project snapshot without launching MetaEditor or writing files."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def correlate_compiler_log(
+        log_path: str,
+        entry_file: str,
+    ) -> dict[str, Any]:
+        return _call(project.correlate_compiler_log, log_path, entry_file)
 
     @server.tool(
         name="query_symbols",

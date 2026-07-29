@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
+from shutil import copy2, copytree
 import tempfile
 import unittest
 
@@ -73,6 +75,30 @@ class ProjectSessionTests(unittest.TestCase):
         self.assertEqual(indexed["revision"], session.project_status()["revision"])
         self.assertEqual(indexed["graph_identity"], session.project_status()["graph_identity"])
 
+    def test_budget_exhaustion_keeps_the_last_valid_snapshot(self) -> None:
+        session = ProjectSession()
+        indexed = session.index_project(str(FIXTURE_ROOT))
+        before_query = session.query_symbols("OnTick")
+
+        with self.assertRaises(AdapterError) as raised:
+            session.index_project(str(FIXTURE_ROOT), max_work=1)
+
+        self.assertEqual("analysis_budget_exceeded", raised.exception.code)
+        self.assertEqual("source_discovery", raised.exception.details["phase"])
+        expected_status = dict(indexed)
+        expected_status.pop("reused")
+        self.assertEqual(expected_status, session.project_status())
+        self.assertEqual(before_query, session.query_symbols("OnTick"))
+
+    def test_initial_budget_exhaustion_leaves_session_unindexed(self) -> None:
+        session = ProjectSession()
+
+        with self.assertRaises(AdapterError) as raised:
+            session.index_project(str(FIXTURE_ROOT), max_work=1)
+
+        self.assertEqual("analysis_budget_exceeded", raised.exception.code)
+        self.assertEqual({"status": "not_indexed", "revision": 0}, session.project_status())
+
     def test_changed_project_publishes_a_new_revision(self) -> None:
         session = ProjectSession()
         with tempfile.TemporaryDirectory() as temporary:
@@ -118,6 +144,31 @@ class ProjectSessionTests(unittest.TestCase):
         actual = session.query_symbols("OnTick")
 
         self.assertEqual(expected.to_dict(), actual)
+
+    def test_compiler_evidence_requires_snapshot_and_preserves_it(self) -> None:
+        session = ProjectSession()
+        with self.assertRaises(AdapterError) as missing:
+            session.correlate_compiler_log("compiler.log", "BasicEA.mq5")
+        self.assertEqual("project_not_indexed", missing.exception.code)
+
+        compiler_log = Path(__file__).parents[1] / "fixtures" / "compiler_logs" / "basic-success.log"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "basic_ea"
+            copytree(FIXTURE_ROOT, root)
+            log_path = root / "compiler.log"
+            copy2(compiler_log, log_path)
+            for source in root.rglob("*"):
+                if source.suffix.lower() in {".mq5", ".mqh"}:
+                    os.utime(source, ns=(1_000_000_000, 1_000_000_000))
+            os.utime(log_path, ns=(2_000_000_000, 2_000_000_000))
+            indexed = session.index_project(str(root))
+            before = _fixture_hashes(root)
+
+            result = session.correlate_compiler_log("compiler.log", "BasicEA.mq5")
+
+            self.assertEqual("current", result["compiler_evidence"]["evidence_state"])
+            self.assertEqual(indexed["revision"], session.project_status()["revision"])
+            self.assertEqual(before, _fixture_hashes(root))
 
 
 if __name__ == "__main__":

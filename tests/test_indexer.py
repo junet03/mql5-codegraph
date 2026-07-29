@@ -3,9 +3,14 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
+from mql5_codegraph.analysis_budget import (
+    MAX_MAX_WORK,
+    AnalysisBudget,
+    AnalysisBudgetExceeded,
+)
 from mql5_codegraph.indexer import analyze_repository, discover_sources
 from mql5_codegraph.parser import parse_source
-from mql5_codegraph.resolver import ParsedUnit, _resolve_include
+from mql5_codegraph.resolver import ParsedUnit, _resolve_include, build_graph
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "basic_ea"
@@ -87,6 +92,45 @@ class IndexerTests(TestCase):
             path = Path(directory) / "graph.json"
             analyze_repository(FIXTURE).save(path)
             self.assertEqual(first, path.read_text(encoding="utf-8"))
+
+    def test_default_analysis_is_deterministic_and_does_not_mutate_source(self) -> None:
+        sources = sorted(
+            path for path in FIXTURE.rglob("*") if path.suffix.lower() in {".mq5", ".mqh"}
+        )
+        before = {path: path.read_bytes() for path in sources}
+
+        first = analyze_repository(FIXTURE).to_json()
+        second = analyze_repository(FIXTURE).to_json()
+
+        self.assertEqual(first, second)
+        self.assertEqual(before, {path: path.read_bytes() for path in sources})
+
+    def test_ambiguous_call_fan_out_is_bounded_during_resolution(self) -> None:
+        root = Path("D:/budget-fixture")
+        source = "\n".join(
+            ["void OnTick() { FanOut(1); }"]
+            + [f"void FanOut(CType{index} value) {{}}" for index in range(8)]
+        )
+        unit = ParsedUnit(root / "Budget.mq5", "Budget.mq5", parse_source(source, "Budget.mq5"))
+        complete_budget = AnalysisBudget(MAX_MAX_WORK)
+        graph, _ = build_graph([unit], root, [], "fingerprint", budget=complete_budget)
+        call_edges = [edge for edge in graph.edges.values() if edge.relationship == "calls"]
+        self.assertEqual(8, len(call_edges))
+
+        with self.assertRaises(AnalysisBudgetExceeded) as raised:
+            build_graph(
+                [unit],
+                root,
+                [],
+                "fingerprint",
+                budget=AnalysisBudget(complete_budget.work_used - 1),
+            )
+
+        self.assertEqual("resolution", raised.exception.phase)
+        self.assertLessEqual(
+            raised.exception.work_used,
+            raised.exception.work_limit,
+        )
 
     def test_resolves_object_method_by_receiver_type_instead_of_same_scope(self) -> None:
         with TemporaryDirectory() as directory:

@@ -10,6 +10,7 @@ from threading import RLock, Thread
 from typing import Callable, Iterable
 from uuid import uuid4
 
+from ..analysis_budget import AnalysisBudget, AnalysisBudgetExceeded
 from ..graph import CodeGraph
 from ..indexer import analyze_repository
 from ..intelligence import IntelligenceKernel
@@ -24,22 +25,28 @@ class AnalysisJob:
     id: str
     root: str
     include_roots: list[str]
+    max_work: int | None
     status: str = "queued"
     started_at: str | None = None
     finished_at: str | None = None
     summary: dict[str, object] | None = None
     error: str | None = None
+    error_code: str | None = None
+    error_details: dict[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "root": self.root,
             "include_roots": list(self.include_roots),
+            "max_work": self.max_work,
             "status": self.status,
             "started_at": self.started_at,
             "finished_at": self.finished_at,
             "summary": self.summary,
             "error": self.error,
+            "error_code": self.error_code,
+            "error_details": self.error_details,
         }
 
 
@@ -71,15 +78,22 @@ class DashboardState:
             self._graph_version = revision
             self._last_error = None
 
-    def start_analysis(self, root: str | Path, include_roots: Iterable[str | Path] = ()) -> AnalysisJob:
+    def start_analysis(
+        self,
+        root: str | Path,
+        include_roots: Iterable[str | Path] = (),
+        *,
+        max_work: int | None = None,
+    ) -> AnalysisJob:
         resolved_root = Path(root).resolve()
         if not resolved_root.is_dir():
             raise ValueError(f"Repository directory does not exist: {resolved_root}")
+        AnalysisBudget(max_work)
         resolved_includes = [str(Path(path).resolve()) for path in include_roots]
         with self._lock:
             if self._active_job_id is not None:
                 raise RuntimeError("An analysis job is already running")
-            job = AnalysisJob(uuid4().hex, str(resolved_root), resolved_includes)
+            job = AnalysisJob(uuid4().hex, str(resolved_root), resolved_includes, max_work)
             self._jobs[job.id] = job
             while len(self._jobs) > self._max_jobs:
                 self._jobs.popitem(last=False)
@@ -94,7 +108,14 @@ class DashboardState:
             job.status = "running"
             job.started_at = _utc_now()
         try:
-            graph = self._analyzer(job.root, job.include_roots)
+            if job.max_work is None:
+                graph = self._analyzer(job.root, job.include_roots)
+            else:
+                graph = self._analyzer(
+                    job.root,
+                    job.include_roots,
+                    max_work=job.max_work,
+                )
             summary = {
                 "files": graph.metadata.get("file_count", 0),
                 "nodes": len(graph.nodes),
@@ -112,6 +133,14 @@ class DashboardState:
                 self._last_error = None
                 job.status = "completed"
                 job.summary = summary
+                job.finished_at = _utc_now()
+        except AnalysisBudgetExceeded as error:
+            with self._lock:
+                self._last_error = error.message
+                job.status = "failed"
+                job.error = error.message
+                job.error_code = error.code
+                job.error_details = error.to_dict()["details"]
                 job.finished_at = _utc_now()
         except Exception as error:  # background boundary: retain last valid graph
             message = str(error) or error.__class__.__name__

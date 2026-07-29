@@ -25,6 +25,7 @@ keeps inferred edges separate from source calls, and stores a deterministic back
 - A versioned Intelligence Kernel shared by direct Python, normalized CLI, and normalized HTTP callers.
 - Evidence-ranked directed paths and deterministic bounded structural context packages.
 - Partial results with diagnostics for incomplete or unresolved code.
+- Analyzer-wide deterministic work budgets that stop excessive indexing without publishing a partial graph.
 
 ## Intelligence Kernel
 
@@ -50,7 +51,7 @@ state. Stored locations are references, not proof that a file is still present o
 ## Private Codex plugin (experimental)
 
 The repository includes `mql5-codegraph-intelligence`, a private local Codex plugin with four MQL5
-workflow skills and eight read-only MCP tools. It projects the same Intelligence Kernel contract and does
+workflow skills and nine read-only MCP tools. It projects the same Intelligence Kernel contract and does
 not edit source, persist an index, or use the network.
 
 ```powershell
@@ -67,7 +68,37 @@ agent should call `project_status`, index an explicitly trusted project root whe
 after source changes. The plugin is an internal alpha, not a stable public MCP contract, and is not
 approved for hosted or untrusted-repository ingestion.
 
+## Analysis work limit
+
+Every source analysis has a deterministic work budget covering discovery, lexing, parsing, resolution,
+and runtime enrichment. The default is 1,000,000 units; use a value from 1 through 10,000,000 only for
+an unusually large trusted local project. Exhaustion returns `analysis_budget_exceeded`, identifies the
+phase and counters, and never writes/publishes a partial graph.
+
+```powershell
+mql5-codegraph analyze C:\work\Example-MQL5 --output build/example.codegraph.json --max-work 2000000 --json
+```
+
+MCP callers can supply the same optional `max_work` to `index_project`. A failed refresh keeps its prior
+in-memory snapshot unchanged.
+
 See the [plugin quickstart](specs/004-mql5-agent-plugin/quickstart.md) for the complete local workflow.
+
+## Compiler evidence correlation
+
+After an operator compiles a trusted local project, agents can correlate its explicitly supplied
+MetaEditor log with the saved graph or active MCP snapshot. The report distinguishes `current`, `stale`,
+and `incomplete` evidence, supports UTF-8 and BOM-marked UTF-16 logs, preserves supported compiler
+findings, and links a finding to a symbol only when the file and declaration line match exactly. It never
+launches MetaEditor, writes compiler artifacts, adds findings to the static graph, or treats compilation
+as runtime proof.
+
+```powershell
+mql5-codegraph compiler-evidence build/example.codegraph.json --entry Experts\Example.mq5 --log compile.log --json
+```
+
+The documented English log grammar, size limit, failure codes, and MCP result are in the
+[compiler-evidence contract](specs/006-compiler-correlation/contracts/compiler-evidence-v1.md).
 
 ## Local dashboard
 

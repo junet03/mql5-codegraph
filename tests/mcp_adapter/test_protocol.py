@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
-import shutil
+from shutil import copy2, copytree
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 
 from mcp import ClientSession, StdioServerParameters
@@ -11,7 +13,9 @@ from mcp.client.stdio import stdio_client
 
 
 FIXTURE_ROOT = Path(__file__).parents[1] / "fixtures" / "basic_ea"
+COMPILER_LOG = Path(__file__).parents[1] / "fixtures" / "compiler_logs" / "basic-success.log"
 EXPECTED_TOOLS = {
+    "correlate_compiler_log",
     "find_paths",
     "get_context",
     "get_context_package",
@@ -24,63 +28,85 @@ EXPECTED_TOOLS = {
 
 
 def _server_parameters() -> StdioServerParameters:
-    entry_point = shutil.which("mql5-codegraph-mcp")
-    if entry_point:
-        return StdioServerParameters(command=entry_point, args=[])
+    project_root = Path(__file__).parents[2]
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = str(project_root / "src")
     return StdioServerParameters(
         command=sys.executable,
         args=["-m", "mql5_codegraph.mcp.server"],
+        cwd=project_root,
+        env=environment,
     )
 
 
 async def _exercise_protocol() -> None:
-    parameters = _server_parameters()
-    async with stdio_client(parameters) as (read_stream, write_stream):
-        async with ClientSession(read_stream, write_stream) as client:
-            await client.initialize()
-            listed = await client.list_tools()
-            tools = {tool.name: tool for tool in listed.tools}
-            if set(tools) != EXPECTED_TOOLS:
-                raise AssertionError(f"Unexpected MCP tools: {sorted(tools)}")
-            for tool in tools.values():
-                annotations = tool.annotations
-                if annotations is None:
-                    raise AssertionError(f"{tool.name} is missing annotations")
-                if annotations.readOnlyHint is not True:
-                    raise AssertionError(f"{tool.name} is not read-only")
-                if annotations.destructiveHint is not False:
-                    raise AssertionError(f"{tool.name} is marked destructive")
-                if annotations.openWorldHint is not False:
-                    raise AssertionError(f"{tool.name} is marked open-world")
+    with TemporaryDirectory() as directory:
+        root = Path(directory) / "basic_ea"
+        copytree(FIXTURE_ROOT, root)
+        log_path = root / "compiler.log"
+        copy2(COMPILER_LOG, log_path)
+        for source in root.rglob("*"):
+            if source.suffix.lower() in {".mq5", ".mqh"}:
+                os.utime(source, ns=(1_000_000_000, 1_000_000_000))
+        os.utime(log_path, ns=(2_000_000_000, 2_000_000_000))
 
-            empty_status = await client.call_tool("project_status", {})
-            if empty_status.isError:
-                raise AssertionError("project_status unexpectedly failed")
-            if empty_status.structuredContent != {
-                "status": "not_indexed",
-                "revision": 0,
-            }:
-                raise AssertionError(empty_status.structuredContent)
+        parameters = _server_parameters()
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as client:
+                await client.initialize()
+                listed = await client.list_tools()
+                tools = {tool.name: tool for tool in listed.tools}
+                if set(tools) != EXPECTED_TOOLS:
+                    raise AssertionError(f"Unexpected MCP tools: {sorted(tools)}")
+                for tool in tools.values():
+                    annotations = tool.annotations
+                    if annotations is None:
+                        raise AssertionError(f"{tool.name} is missing annotations")
+                    if annotations.readOnlyHint is not True:
+                        raise AssertionError(f"{tool.name} is not read-only")
+                    if annotations.destructiveHint is not False:
+                        raise AssertionError(f"{tool.name} is marked destructive")
+                    if annotations.openWorldHint is not False:
+                        raise AssertionError(f"{tool.name} is marked open-world")
 
-            indexed = await client.call_tool(
-                "index_project",
-                {"root": str(FIXTURE_ROOT.resolve())},
-            )
-            if indexed.isError:
-                raise AssertionError("index_project unexpectedly failed")
-            if indexed.structuredContent["status"] != "indexed":
-                raise AssertionError(indexed.structuredContent)
+                empty_status = await client.call_tool("project_status", {})
+                if empty_status.isError:
+                    raise AssertionError("project_status unexpectedly failed")
+                if empty_status.structuredContent != {
+                    "status": "not_indexed",
+                    "revision": 0,
+                }:
+                    raise AssertionError(empty_status.structuredContent)
 
-            queried = await client.call_tool(
-                "query_symbols",
-                {"target": "OnTick"},
-            )
-            if queried.isError:
-                raise AssertionError("query_symbols unexpectedly failed")
-            if queried.structuredContent["operation"] != "query":
-                raise AssertionError(queried.structuredContent)
-            if not queried.structuredContent["nodes"]:
-                raise AssertionError("query_symbols returned no OnTick node")
+                indexed = await client.call_tool(
+                    "index_project",
+                    {"root": str(root)},
+                )
+                if indexed.isError:
+                    raise AssertionError("index_project unexpectedly failed")
+                if indexed.structuredContent["status"] != "indexed":
+                    raise AssertionError(indexed.structuredContent)
+
+                queried = await client.call_tool(
+                    "query_symbols",
+                    {"target": "OnTick"},
+                )
+                if queried.isError:
+                    raise AssertionError("query_symbols unexpectedly failed")
+                if queried.structuredContent["operation"] != "query":
+                    raise AssertionError(queried.structuredContent)
+                if not queried.structuredContent["nodes"]:
+                    raise AssertionError("query_symbols returned no OnTick node")
+
+                correlated = await client.call_tool(
+                    "correlate_compiler_log",
+                    {"log_path": "compiler.log", "entry_file": "BasicEA.mq5"},
+                )
+                if correlated.isError:
+                    raise AssertionError("correlate_compiler_log unexpectedly failed")
+                evidence = correlated.structuredContent["compiler_evidence"]
+                if evidence["evidence_state"] != "current" or evidence["outcome"] != "success":
+                    raise AssertionError(correlated.structuredContent)
 
 
 async def _exercise_tool_error() -> None:

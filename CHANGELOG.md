@@ -7,6 +7,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Deterministic analyzer-wide work budgets for discovery, lexing, parsing, resolution, and runtime
+  enrichment, with transactional CLI, dashboard, and MCP failure behavior.
+- Read-only compiler-evidence correlation for a bounded operator-supplied MetaEditor log, exposed through
+  CLI and the private MCP plugin without changing static graph facts or launching a compiler.
+- BOM-marked UTF-16 LE/BE MetaEditor compiler-log decoding, alongside UTF-8, with regression coverage.
+
 ## [0.2.0] - 2026-07-23
 
 ### Added

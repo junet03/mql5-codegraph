@@ -1,6 +1,8 @@
 # Known Limitations and Roadmap
 
-The MVP is a tolerant structural analyzer, not a MetaEditor compiler frontend.
+The MVP is a tolerant structural analyzer, not a MetaEditor compiler frontend. It can correlate an
+operator-supplied, supported MetaEditor log with a current graph, but it does not start MetaEditor, create
+compiler artifacts, or claim compiler/runtime parity.
 
 - Macro bodies and conditional compilation are recorded but not fully expanded.
 - Overload resolution uses scope and arity hints, not complete MQL5 type inference.
@@ -43,16 +45,20 @@ The MVP is a tolerant structural analyzer, not a MetaEditor compiler frontend.
 - Include resolution rejects absolute, drive-qualified, UNC, and canonically escaping targets before a
   filesystem existence probe. Explicit include roots remain approved read boundaries.
 - Saved graph metadata cannot authorize source reads. The source viewer requires an explicit active root.
-- Four low-severity adversarial scaling risks remain accepted only for the local alpha: repeated parser range
-  membership scans, overlapping nested-argument scans, repeated binding-list scans, and Cartesian ambiguous
-  call-edge fan-out. A hosted or multi-tenant release is gated on explicit work budgets or linear-time
-  structures for these paths.
+- Parser range membership, nested-argument scans, binding-list scans, and ambiguous call-edge fan-out
+  consume the analyzer-wide deterministic work budget. Exhaustion prevents a partial graph from being
+  returned or published, but it is not a universal wall-clock guarantee or a performance claim.
 - The private MCP plugin inherits this local trusted-input boundary. It keeps one in-memory snapshot and
-  exposes bounded Intelligence Kernel operations, but initial repository analysis still has no universal
-  wall-clock or work budget.
+  exposes bounded Intelligence Kernel operations plus a bounded initial analysis operation. Hosted or
+  multi-user ingestion remains out of scope pending broader resource, tenancy, and security design.
+- Compiler correlation accepts only a <=2 MiB log explicitly supplied under the selected trusted root. It
+  supports UTF-8 and BOM-marked UTF-16 logs with the documented English
+  `Result: <errors> errors, <warnings> warnings` summary and bounded error/warning records; unsupported
+  locales or variants return incomplete evidence rather than a success claim. MetaEditor process control
+  remains out of scope.
 
 Planned milestones include a formal Tree-sitter MQL5 grammar, richer type inference, incremental indexing,
-Graphify/Neo4j adapters, protected evidence freshness probes, and compile-diagnostic correlation with
-MetaEditor. The experimental private MCP adapter now exists; a stable public MCP surface remains deferred
+Graphify/Neo4j adapters, protected evidence freshness probes, MetaEditor process-control review, and a
+real operator-log corpus. The experimental private MCP adapter now exists; a stable public MCP surface remains deferred
 until its contracts can preserve the same versioning, evidence, ambiguity, completion, and resource-budget
 semantics.
