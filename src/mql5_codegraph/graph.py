@@ -15,7 +15,7 @@ SCHEMA_VERSION = "1.0.0"
 
 def stable_id(prefix: str, *parts: object) -> str:
     payload = "\x1f".join(str(part) for part in parts)
-    digest = sha1(payload.encode("utf-8")).hexdigest()[:20]
+    digest = sha1(payload.encode("utf-8"), usedforsecurity=False).hexdigest()[:20]
     return f"{prefix}:{digest}"
 
 

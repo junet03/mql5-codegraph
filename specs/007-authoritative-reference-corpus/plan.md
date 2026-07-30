@@ -10,7 +10,7 @@
 Add an optional `reference` package that converts operator-owned, text-bearing PDF references into
 immutable page-aware corpus snapshots. Each snapshot contains deterministic JSONL records and a linked
 Markdown wiki, retains source hashes and physical page spans, and supports bounded authority-aware lexical
-search through one backend-neutral core. The CLI builds and queries snapshots; the private MCP adapter may
+search through one backend-neutral core. The CLI builds and queries snapshots; the experimental MCP adapter may
 attach and query an already-built snapshot without write, shell, package-install, or network authority.
 An isolated, explicit CLI adapter may invoke an externally installed Graphify 0.9.x to produce a disposable
 semantic overlay, but the overlay never becomes normative evidence or a core dependency.

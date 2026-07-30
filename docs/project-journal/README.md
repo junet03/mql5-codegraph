@@ -32,6 +32,7 @@ open risks, and the exact next objective so work can continue safely across sess
 | 2026-07-30 | [001 — MCP transport lifecycle evidence](2026-07-30-001-mcp-transport-lifecycle.md) | MCP exits are attributable, idle continuity is covered, and the non-editable runtime/plugin are deployed | Run a 30-minute Codex host idle/resume soak |
 | 2026-07-30 | [002 — Authoritative reference corpus](2026-07-30-002-authoritative-reference-corpus.md) | Page-aware 10,021-page corpus, cited search, agent tools, optional Graphify overlay, and local runtime deployed | Push the branch, open a draft PR, and verify hosted CI |
 | 2026-07-30 | [003 — Cross-platform compiler paths](2026-07-30-003-cross-platform-compiler-paths.md) | Windows and POSIX absolute diagnostic paths now retain outside-project semantics on every host | Push the focused fix and verify the full hosted CI matrix |
+| 2026-07-30 | [004 — Public v0.3.0 release](2026-07-30-004-public-v0.3.0-release.md) | Public-beta package and credential-isolated Graphify release candidate verified locally | Merge through hosted CI, enable public security controls, and publish v0.3.0 |
 
 ## Truth hierarchy
 

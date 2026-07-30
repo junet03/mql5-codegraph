@@ -53,3 +53,15 @@ the directed Graphify health diagnostic described in the current project journal
 - Call out compatibility, security, schema, storage, and performance risks.
 - Update the active specification, ADRs, and journal when the change affects their contracts.
 - Ensure `git diff --cached --check` passes before committing.
+
+## Community
+
+- Use [GitHub Discussions](https://github.com/junet03/mql5-codegraph/discussions) for design questions
+  and early proposals.
+- Use [GitHub Issues](https://github.com/junet03/mql5-codegraph/issues) for bounded, reproducible work.
+- Follow [SECURITY.md](SECURITY.md) instead of opening a public issue for a vulnerability.
+- GitHub maintains the canonical [**Contributors**](https://github.com/junet03/mql5-codegraph/graphs/contributors)
+  list from commit history.
+
+If the project helps your work, a [⭐ star](https://github.com/junet03/mql5-codegraph) helps other MQL5
+developers find it. Contributions remain welcome regardless of whether you star the repository.

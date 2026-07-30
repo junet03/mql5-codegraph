@@ -26,10 +26,12 @@ class _FakeGraphify:
         self.exit_code = exit_code
         self.malformed = malformed
         self.calls: list[list[str]] = []
+        self.environments: list[dict[str, str]] = []
 
     def __call__(self, command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
         self.calls.append(list(command))
         self.assert_safe_kwargs(kwargs)
+        self.environments.append(dict(kwargs["env"]))  # type: ignore[arg-type]
         if command[1:] == ["--version"]:
             return subprocess.CompletedProcess(
                 command,
@@ -71,6 +73,8 @@ class _FakeGraphify:
             raise AssertionError("Graphify subprocess must use shell=False")
         if values.get("capture_output") is not True:
             raise AssertionError("Graphify subprocess must capture output")
+        if not isinstance(values.get("env"), dict):
+            raise AssertionError("Graphify subprocess must receive an explicit environment")
 
 
 class GraphifyAdapterTests(unittest.TestCase):
@@ -141,6 +145,41 @@ class GraphifyAdapterTests(unittest.TestCase):
                 build_graphify_overlay(request, runner=fake)
             self.assertEqual("graphify_remote_not_authorized", raised.exception.code)
             self.assertEqual([], fake.calls)
+
+    @patch.dict(
+        "os.environ",
+        {
+            "ANTHROPIC_API_KEY": "unrelated-provider",
+            "GITHUB_TOKEN": "unrelated-host-token",
+            "OPENAI_API_KEY": "selected-provider",
+            "PATH": "runtime-path",
+        },
+        clear=True,
+    )
+    def test_subprocess_environment_is_scoped_to_the_selected_backend(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake = _FakeGraphify()
+            request = GraphifyRequest(
+                corpus_root=self._corpus(root),
+                output_dir=root / "overlay",
+                executable="graphify",
+                backend="openai",
+                processing_boundary="remote",
+                allow_remote=True,
+            )
+
+            build_graphify_overlay(request, runner=fake)
+
+            version_environment, extract_environment = fake.environments
+            self.assertEqual({"PATH": "runtime-path"}, version_environment)
+            self.assertEqual("runtime-path", extract_environment["PATH"])
+            self.assertEqual(
+                "selected-provider",
+                extract_environment["OPENAI_API_KEY"],
+            )
+            self.assertNotIn("ANTHROPIC_API_KEY", extract_environment)
+            self.assertNotIn("GITHUB_TOKEN", extract_environment)
 
     @patch.dict(
         "os.environ",

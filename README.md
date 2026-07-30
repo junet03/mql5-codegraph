@@ -8,12 +8,23 @@
   <a href="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-2EA44F.svg"></a>
-  <img alt="Status: private alpha" src="https://img.shields.io/badge/Status-Private%20Alpha-FF9A3D">
+  <img alt="Status: public beta" src="https://img.shields.io/badge/Status-Public%20Beta-2EA44F">
 </p>
 
 MQL5 CodeGraph is an offline static-analysis library and CLI that builds an evidence-backed graph
 from MetaTrader 5 `.mq5` and `.mqh` source. It treats terminal callbacks as runtime relationships,
 keeps inferred edges separate from source calls, and stores a deterministic backend-neutral JSON index.
+
+## Install v0.3.0
+
+Install the public release wheel and whichever optional local capabilities you need:
+
+```powershell
+python -m pip install "mql5-codegraph[reference,mcp] @ https://github.com/junet03/mql5-codegraph/releases/download/v0.3.0/mql5_codegraph-0.3.0-py3-none-any.whl"
+```
+
+The core analyzer has no cloud account or API-key requirement. The `reference` extra builds and searches
+operator-owned PDFs offline; the `mcp` extra provides the local read-only stdio adapter.
 
 ## MVP capabilities
 
@@ -73,9 +84,9 @@ An explicit external Graphify 0.9.x adapter can build a separate semantic overla
 Local processing currently requires Ollama; remote providers require `--processing-boundary remote
 --allow-remote`. Overlay inference is discovery evidence, never a normative document citation.
 
-## Private Codex plugin (experimental)
+## Codex plugin (experimental)
 
-The repository includes `mql5-codegraph-intelligence`, a private local Codex plugin with five MQL5
+The repository includes `mql5-codegraph-intelligence`, a local Codex plugin with five MQL5
 workflow skills and 13 read-only MCP tools. It projects the same Intelligence Kernel and reference-corpus
 contracts and does not edit source, persist an index, build a corpus, invoke Graphify, or use the network.
 
@@ -92,13 +103,19 @@ source checkout. Start a fresh Codex task in the actual MQL5 project, not in thi
 agent should call `project_status`, index an explicitly trusted project root when needed, and re-index
 after source changes. For platform-document questions, it separately calls `reference_status`, attaches
 only an operator-selected complete corpus, and preserves the corpus fingerprint in follow-up calls. The
-plugin is an internal alpha, not a stable public MCP contract, and is not approved for hosted or
+plugin is an experimental public beta, not a stable MCP contract, and is not approved for hosted or
 untrusted-repository ingestion.
 
 The MCP entry point emits bounded JSON lifecycle records to stderr only. These distinguish startup,
 clean stdio EOF, and unhandled server failure without exposing project roots or source. If Codex reports
 `Transport closed`, restart the task/app transport and re-index; an in-memory snapshot cannot survive its
 own server process.
+
+The core, dashboard, CLI, and MCP server do not read provider API keys. Only the explicit optional
+Graphify overlay can use a model credential. Its subprocess receives a backend-scoped environment:
+the version probe receives no provider secret, and extraction receives only the selected provider's
+variables plus a small runtime allowlist. Unrelated host credentials are not inherited. See the
+[security policy](SECURITY.md) for the exact trust boundary.
 
 ## Analysis work limit
 
@@ -159,8 +176,22 @@ mql5-codegraph status build/basic-ea.json --json
 ```
 
 See [architecture](docs/architecture.md), [known limitations](docs/limitations.md), and the
-[dashboard guide](docs/web-dashboard.md). Contributors and tools are thanked in
-[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md). Multi-session work is recorded in the
+[dashboard guide](docs/web-dashboard.md).
+
+## Community
+
+If MQL5 CodeGraph saves you time, please [⭐ star the repository](https://github.com/junet03/mql5-codegraph).
+Stars help other MQL5 developers discover the project and show where sustained maintenance is useful.
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
+- Meet the [**Contributors**](https://github.com/junet03/mql5-codegraph/graphs/contributors).
+- Start a design conversation in [GitHub Discussions](https://github.com/junet03/mql5-codegraph/discussions)
+  or report a reproducible defect through [GitHub Issues](https://github.com/junet03/mql5-codegraph/issues).
+- Report vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
+
+People, communities, and development tools are credited in
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); bundled dashboard licenses are retained in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Multi-session work is recorded in the
 [project journal](docs/project-journal/README.md), with durable choices tracked as
 [architecture decisions](docs/decisions/README.md).
 

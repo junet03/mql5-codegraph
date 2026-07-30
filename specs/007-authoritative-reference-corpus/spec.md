@@ -114,6 +114,9 @@ against a pinned real installation without treating semantic edges as normative 
    is not replaced.
 3. **Given** an operation that may transmit corpus content to a remote model, **When** no explicit remote
    processing authority was supplied, **Then** the operation is refused before content is transmitted.
+4. **Given** the parent process contains credentials for multiple services, **When** an explicitly
+   authorized Graphify backend runs, **Then** the version probe receives no provider credential and the
+   extraction child receives only runtime values plus variables for the selected backend.
 
 ---
 
@@ -159,6 +162,8 @@ independent status.
 - A corpus snapshot is copied between Windows and Linux or moved to another absolute path.
 - Graphify writes a wiki containing stale files, changes its CLI/output format, or generates more than
   5,000 nodes.
+- The parent process contains GitHub, cloud, or multiple model-provider credentials unrelated to the
+  selected Graphify backend.
 - A user points the corpus builder at the MQL5 CodeGraph source repository, plugin cache, or another
   immutable toolchain directory.
 
@@ -216,6 +221,9 @@ independent status.
   malformed snapshots, Graphify adapter failures, and CLI/agent conformance.
 - **FR-020**: The feature MUST support local Windows and Linux workflows and MUST use portable corpus-relative
   identities rather than persisting workstation-specific absolute paths in canonical outputs.
+- **FR-021**: Graphify subprocesses MUST receive an explicit allowlisted environment. Version probing MUST
+  receive no provider credential, extraction MUST receive only the selected backend's supported variables,
+  and no provider secret may appear in command arguments, manifests, structured errors, or lifecycle logs.
 
 ### Key Entities
 
@@ -255,6 +263,8 @@ independent status.
 - **SC-009**: Public package, documentation, license, notice, and attribution checks contain no bundled
   third-party PDF bytes and no statement implying MetaQuotes, Graphify, OpenAI, or their contributors
   sponsor or endorse MQL5 CodeGraph.
+- **SC-010**: Release scans find no secret in tracked content or Git history, and subprocess regression
+  coverage proves unrelated provider and host credentials are absent from Graphify child environments.
 
 ## Assumptions
 
@@ -268,6 +278,8 @@ independent status.
   terms even though MQL5 CodeGraph's own source code is MIT-licensed.
 - Graphify is an optional external tool and its pre-1.0 CLI/output compatibility is protected by version
   checks, adapter validation, and fixture tests rather than assumed.
+- The operator is responsible for selecting a trusted Graphify executable; environment filtering reduces
+  credential exposure but is not an operating-system sandbox.
 - Corpus attachment is explicitly operator-selected and independent of the selected MQL5 project root.
 - The first implementation may expose reference status/search/excerpt through CLI and the existing private
-  MCP alpha; dashboard authoring and hosted/multi-user corpus services are deferred.
+  MCP beta; dashboard authoring and hosted/multi-user corpus services are deferred.

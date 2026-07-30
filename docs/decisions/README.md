@@ -13,3 +13,4 @@ as Proposed, Accepted, Superseded, or Deprecated, and link the superseding recor
 | [ADR-0006](ADR-0006-analysis-work-budget.md) | Accepted | Bound canonical analysis work without publishing partial graphs |
 | [ADR-0007](ADR-0007-compiler-evidence-correlation.md) | Accepted | Correlate bounded supplied compiler logs without compiler process control |
 | [ADR-0008](ADR-0008-authoritative-reference-corpus.md) | Accepted | Keep authoritative references page-aware and Graphify optional |
+| [ADR-0009](ADR-0009-graphify-credential-isolation.md) | Accepted | Give Graphify only runtime and selected-backend environment values |

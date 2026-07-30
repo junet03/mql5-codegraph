@@ -10,6 +10,7 @@ from .analysis_budget import AnalysisBudget
 from .diagnostics import Diagnostic, AMBIGUOUS_CALL, UNRESOLVED_CALL, UNRESOLVED_INCLUDE
 from .graph import CodeGraph, GraphNode, SourceLocation, stable_id
 from .parser import Declaration, ParseResult
+from .version import __version__
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,7 +99,7 @@ def build_graph(
     active_budget = budget or AnalysisBudget()
     graph = CodeGraph({
         "root": root.as_posix(), "source_fingerprint": fingerprint,
-        "file_count": len(units), "tool_version": "0.2.0",
+        "file_count": len(units), "tool_version": __version__,
     })
     absolute_to_relative: dict[Path, str] = {}
     for unit in units:

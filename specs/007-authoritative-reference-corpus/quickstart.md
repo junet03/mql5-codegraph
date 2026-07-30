@@ -63,7 +63,7 @@ Confirm each result identifies:
 - exact physical PDF citation pages and character offsets;
 - completion/truncation metadata.
 
-## Attach to the private MCP alpha
+## Attach to the experimental local MCP beta
 
 Configure the existing `mql5-codegraph-mcp` server, then call:
 

@@ -8,6 +8,7 @@ from typing import Any, Mapping, Sequence
 
 from ..analysis_budget import AnalysisBudget
 from ..intelligence import IntelligenceError
+from ..version import __version__
 from .state import DashboardState
 
 
@@ -96,7 +97,7 @@ class DashboardApi:
     def health(self) -> dict[str, object]:
         status = self.state.status()
         return {
-            "service": "mql5-codegraph", "version": "0.2.0", "ok": True,
+            "service": "mql5-codegraph", "version": __version__, "ok": True,
             "ready": status["ready"], "graph_version": status["graph_version"],
             "active_job_id": (status["active_job"] or {}).get("id") if status["active_job"] else None,
         }

@@ -36,6 +36,77 @@ _MAX_OVERLAY_BYTES = 2 * 1024 * 1024 * 1024
 _MAX_GRAPH_BYTES = 512 * 1024 * 1024
 _MAX_GRAPH_NODES = 50_000
 _MAX_GRAPH_EDGES = 250_000
+_RUNTIME_ENVIRONMENT = frozenset(
+    {
+        "COMSPEC",
+        "HOME",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "PATH",
+        "PATHEXT",
+        "REQUESTS_CA_BUNDLE",
+        "SSL_CERT_DIR",
+        "SSL_CERT_FILE",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "TZ",
+        "USERPROFILE",
+        "WINDIR",
+    }
+)
+_BACKEND_ENVIRONMENT = {
+    "claude": frozenset(
+        {
+            "ANTHROPIC_API_KEY",
+            "ANTHROPIC_BASE_URL",
+            "ANTHROPIC_MODEL",
+            "GRAPHIFY_CLAUDE_MODEL",
+        }
+    ),
+    "deepseek": frozenset(
+        {
+            "DEEPSEEK_API_KEY",
+            "DEEPSEEK_BASE_URL",
+            "GRAPHIFY_DEEPSEEK_MODEL",
+        }
+    ),
+    "gemini": frozenset(
+        {
+            "GEMINI_API_KEY",
+            "GEMINI_BASE_URL",
+            "GOOGLE_API_KEY",
+            "GRAPHIFY_GEMINI_MODEL",
+        }
+    ),
+    "kimi": frozenset(
+        {
+            "KIMI_BASE_URL",
+            "KIMI_MODEL",
+            "MOONSHOT_API_KEY",
+        }
+    ),
+    "ollama": frozenset(
+        {
+            "OLLAMA_API_KEY",
+            "OLLAMA_BASE_URL",
+            "OLLAMA_HOST",
+            "OLLAMA_MODEL",
+        }
+    ),
+    "openai": frozenset(
+        {
+            "GRAPHIFY_OPENAI_MODEL",
+            "OPENAI_API_KEY",
+            "OPENAI_BASE_URL",
+            "OPENAI_MODEL",
+        }
+    ),
+}
 
 Runner = Callable[..., subprocess.CompletedProcess[str]]
 
@@ -117,10 +188,24 @@ def _is_loopback_endpoint(value: str) -> bool:
         return False
 
 
+def _subprocess_environment(backend: str | None = None) -> dict[str, str]:
+    """Return only runtime and selected-provider values for Graphify."""
+
+    allowed = set(_RUNTIME_ENVIRONMENT)
+    if backend is not None:
+        allowed.update(_BACKEND_ENVIRONMENT[backend])
+    return {
+        name: value
+        for name in sorted(allowed)
+        if (value := os.environ.get(name)) is not None
+    }
+
+
 def _run(
     runner: Runner,
     command: list[str],
     *,
+    environment: Mapping[str, str],
     timeout: int,
     failure_code: str,
     failure_message: str,
@@ -129,6 +214,7 @@ def _run(
         result = runner(
             command,
             capture_output=True,
+            env=dict(environment),
             text=True,
             shell=False,
             timeout=timeout,
@@ -154,6 +240,7 @@ def _probe_version(request: GraphifyRequest, runner: Runner) -> str:
     result = _run(
         runner,
         [request.executable, "--version"],
+        environment=_subprocess_environment(),
         timeout=min(request.timeout_seconds, 30),
         failure_code="graphify_unavailable",
         failure_message="Graphify version probe failed",
@@ -392,6 +479,7 @@ def build_graphify_overlay(
         _run(
             runner,
             command,
+            environment=_subprocess_environment(request.backend),
             timeout=request.timeout_seconds,
             failure_code="graphify_execution_failed",
             failure_message="Graphify semantic extraction failed",

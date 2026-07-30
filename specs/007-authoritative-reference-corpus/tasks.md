@@ -82,7 +82,7 @@ match, truncation, and corrupt-snapshot cases; repeat and compare complete JSON 
 ## Phase 5: User Story 3 - Give agents the same bounded reference evidence (Priority: P3)
 
 **Goal**: Attach one valid corpus independently of the project graph and expose only bounded status,
-search, and excerpt operations to the private local MCP alpha.
+search, and excerpt operations to the experimental local MCP beta.
 
 **Independent Test**: Compare MCP and core results for one corpus, assert independent revisions and
 fingerprints, and verify invalid/stale loads leave the active corpus unchanged.
@@ -156,6 +156,10 @@ confirm package contents include code/docs/notices but no PDF or generated corpu
 - [X] T030 Run an opt-in smoke on `D:\mql5-pdf`, verify 10,021-page accounting and at least 20 golden queries, while keeping all output outside Git
 - [X] T031 Run incremental Graphify update and directed multigraph diagnostics, then keep `graphify-out/` uncommitted
 - [X] T032 Mark the feature spec/checklist/tasks complete and record exact evidence, limitations, and next objective in `specs/007-authoritative-reference-corpus/spec.md` and `docs/project-journal/`
+- [X] T033 Add backend-scoped Graphify subprocess environments and tests that exclude unrelated provider and GitHub credentials
+- [X] T034 Audit tracked history, release artifacts, Python dependencies, bundled web dependencies, and static security findings
+- [X] T035 Prepare versioned public-release metadata, third-party notices, acknowledgements, community links, and durable release notes
+- [ ] T036 Run the complete Python/web/package/Graphify release gate and publish v0.3.0 only after hosted protections pass
 
 ---
 

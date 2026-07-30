@@ -7,12 +7,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-30
+
 ### Added
 
 - Deterministic analyzer-wide work budgets for discovery, lexing, parsing, resolution, and runtime
   enrichment, with transactional CLI, dashboard, and MCP failure behavior.
 - Read-only compiler-evidence correlation for a bounded operator-supplied MetaEditor log, exposed through
-  CLI and the private MCP plugin without changing static graph facts or launching a compiler.
+  CLI and the experimental MCP plugin without changing static graph facts or launching a compiler.
 - BOM-marked UTF-16 LE/BE MetaEditor compiler-log decoding, alongside UTF-8, with regression coverage.
 - Bounded MCP stdio lifecycle telemetry for startup, clean EOF, and unhandled failure, plus idle-session
   and crash-path regression coverage.
@@ -21,11 +23,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   optional isolated Graphify semantic overlay.
 - A fifth plugin workflow skill for cited MQL5 reference research and public operator/contributor
   guidance covering evidence boundaries, local data ownership, extraction limits, and attribution.
+- Public beta installation, community, contributor, third-party notice, and security guidance.
+
+### Changed
+
+- Dashboard development tooling now uses ESLint 10.8.0 with a vulnerability-free dependency tree.
+- Runtime version reporting now comes from one shared authority across package exports, CLI output, graph
+  metadata, dashboard health, and HTTP server identification.
 
 ### Fixed
 
 - Cross-platform compiler-diagnostic containment now recognizes absolute Windows, UNC, and POSIX path
   syntax independently of the runner operating system.
+
+### Security
+
+- Graphify version probes now receive no provider credential, and semantic extraction receives only
+  runtime values plus environment variables for the explicitly selected backend.
+- Stable graph IDs retain their existing SHA-1 serialization while explicitly marking the digest as
+  non-security use for static-analysis tooling.
 
 ## [0.2.0] - 2026-07-23
 
@@ -44,5 +60,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Loopback host/origin enforcement and explicit source-viewer roots.
 - Include containment before filesystem probes.
 
-[Unreleased]: https://github.com/junet03/mql5-codegraph/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/junet03/mql5-codegraph/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/junet03/mql5-codegraph/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/junet03/mql5-codegraph/releases/tag/v0.2.0

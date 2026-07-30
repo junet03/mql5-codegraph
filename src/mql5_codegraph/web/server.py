@@ -17,6 +17,7 @@ import webbrowser
 from ..analysis_budget import AnalysisBudget
 from ..graph import CodeGraph
 from ..intelligence import IntelligenceError
+from ..version import __version__
 from .api import ApiError, DashboardApi
 from .state import DashboardState
 
@@ -55,7 +56,7 @@ class DashboardThreadingHTTPServer(ThreadingHTTPServer):
 
 
 class DashboardRequestHandler(SimpleHTTPRequestHandler):
-    server_version = "MQL5CodeGraph/0.2"
+    server_version = f"MQL5CodeGraph/{__version__}"
 
     def __init__(self, *args: Any, api: DashboardApi, static_root: Path, **kwargs: Any) -> None:
         self.api = api

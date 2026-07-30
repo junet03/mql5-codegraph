@@ -1,6 +1,6 @@
 {
   "name": "mql5-codegraph-dashboard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -19,11 +19,12 @@
     "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@types/cytoscape": "^3.21.9",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
-    "eslint": "9.39.4",
+    "eslint": "10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "typescript": "5.9.3",

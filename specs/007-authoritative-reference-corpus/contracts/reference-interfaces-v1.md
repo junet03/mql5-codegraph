@@ -65,6 +65,11 @@ mql5-codegraph reference graphify <corpus-root> --output <overlay-root>
 - `local` permits only the explicit `ollama` backend.
 - `remote` is refused unless `--allow-remote` is present.
 - Invocation uses `shell=False`; source Markdown is read-only; output is isolated.
+- The version probe receives no provider credential. Extraction receives only the runtime allowlist and
+  the explicitly selected backend's endpoint, model, and credential variables; unrelated host tokens and
+  credentials for other providers are not inherited.
+- Credentials are never command arguments, overlay metadata, or structured errors. The executable remains
+  a trusted operator boundary and is not a sandbox.
 - Successful validation publishes a separate overlay pointer. Failure preserves any prior overlay.
 - Overlay output is labeled `semantic_overlay_inference` and is never a reference citation.
 
@@ -84,7 +89,7 @@ classification.
 
 ## MCP tools
 
-The private local MCP alpha adds four read-only tools:
+The experimental local MCP beta adds four read-only tools:
 
 ### `load_reference_corpus`
 

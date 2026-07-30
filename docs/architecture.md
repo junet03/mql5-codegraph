@@ -6,14 +6,14 @@ The pipeline is intentionally layered:
 AnalysisBudget -> source discovery -> lexer -> structural parser -> repository resolver
                  -> MQL5 runtime enrichment -> canonical CodeGraph
                  -> immutable GraphIndex -> IntelligenceKernel
-                                         -> CLI/Web/private MCP adapters
+                                         -> CLI/Web/experimental MCP adapters
 ```
 
 Reference documents use a separate evidence pipeline:
 
 ```text
 operator-owned PDFs -> ReferenceBuilder -> immutable JSONL + Markdown snapshot
-                                      -> ReferenceCorpus -> CLI/private MCP reads
+                                      -> ReferenceCorpus -> CLI/experimental MCP reads
                                       -> optional external Graphify 0.9.x overlay
 ```
 
@@ -61,8 +61,10 @@ fingerprint. A response cannot promote reference content to a project edge, and 
 `expected_corpus_fingerprint` on follow-up calls.
 
 Graphify is not imported or vendored by the core. The explicit CLI adapter invokes an observed 0.9.x
-executable with `shell=False`, an explicit model backend/processing boundary, a timeout, and isolated
-output. Its artifacts are tied to one corpus fingerprint and always labeled
+executable with `shell=False`, an explicit model backend/processing boundary, a timeout, isolated output,
+and a child environment limited to runtime variables plus the selected backend's endpoint, model, and
+credential variables. The version probe receives no provider credentials. Its artifacts are tied to one
+corpus fingerprint and always labeled
 `semantic_overlay_inference`. They never enter `ReferenceCorpus` or `CodeGraph`.
 
 ## Analysis work budget
@@ -82,7 +84,7 @@ dashboard and MCP publish replacements only after the full analysis succeeds.
 | `/api/v1/intelligence/*` | Intelligence contract `1.0.0` | Route defaults, HTTP status, JSON projection |
 | `compiler-evidence` CLI | Compiler evidence contract `1.0.0` | Read-only correlation of a supplied log with a saved graph |
 | Reference CLI namespace | Reference contract `1.0.0` | Offline build, validation, cited search, excerpt, and explicit Graphify adapter |
-| Private MCP stdio alpha | Experimental 13-tool projection | Independent trusted project/reference snapshots and structured tool errors |
+| MCP stdio beta | Experimental 13-tool projection | Independent trusted project/reference snapshots and structured tool errors |
 | Legacy CLI and unversioned HTTP | Frozen historical shapes | Exact compatibility projector over the same snapshot |
 | GraphML and representation exporters | Canonical graph schema | Transform representation without reinterpreting semantics |
 
@@ -90,7 +92,7 @@ The Intelligence contract and canonical graph schema are versioned independently
 valid shapes and semantics. Minor Intelligence versions may add optional fields. Changed defaults, ranking,
 errors, removed fields, or incompatible behavior require a new major and a new `/api/vN` HTTP prefix.
 
-The private MCP tool names are not part of the stable compatibility promise. Its official SDK dependency
+The experimental MCP tool names are not part of the stable compatibility promise. Its official SDK dependency
 is optional and capped below 2.x so a major protocol-runtime migration remains deliberate.
 
 The stdio entry point writes machine-readable lifecycle events to stderr, never stdout. `starting`

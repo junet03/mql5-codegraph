@@ -34,7 +34,8 @@ python -m pip install "mql5-codegraph[reference]"
 
 The `reference` extra adds pypdf for document structure and pypdfium2/PDFium for fast streaming text
 extraction. They are used only for corpus builds. Status, search, excerpts, and MCP reads of an existing
-corpus use the standard library. Install `mql5-codegraph[mcp]` as well for the private local agent adapter.
+corpus use the standard library. Install `mql5-codegraph[mcp]` as well for the experimental local agent
+adapter.
 
 ## Build the three recognized references
 
@@ -149,7 +150,7 @@ differ from printed labels.
 
 ## Agent workflow
 
-The private MCP alpha exposes 13 read-only tools; four are reference-specific:
+The experimental local MCP beta exposes 13 read-only tools; four are reference-specific:
 
 1. `reference_status`
 2. `load_reference_corpus`
@@ -190,9 +191,18 @@ Graphify documentation extraction uses a model backend:
 - Other supported backends require `--processing-boundary remote --allow-remote`.
 - Remote authority applies to that invocation only and means normalized document content may leave the
   machine according to the selected provider's configuration.
+- The version probe receives only a minimal runtime environment and no provider API key.
+- Extraction forwards only the selected backend's documented endpoint/model/credential variables plus
+  the runtime allowlist. It does not inherit unrelated host tokens or another provider's key.
+- Provider keys stay in the child environment; they are never command arguments, overlay identity,
+  artifact metadata, or structured errors.
 
 Graphify absence, timeout, unsupported version, non-zero exit, malformed graph, or oversized output never
 invalidates the authoritative corpus or replaces a prior valid overlay.
+
+The external executable is still a trusted operator boundary rather than a filesystem sandbox. Use an
+isolated identity for untrusted tools or documents, and prefer least-privileged, short-lived credentials
+for any explicitly authorized remote run.
 
 ## Known extraction limits
 

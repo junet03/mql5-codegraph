@@ -30,6 +30,7 @@ from .reference import (
     build_graphify_overlay,
     build_reference_corpus,
 )
+from .version import __version__
 
 
 def _emit(value: Any, as_json: bool, human: str | None = None) -> None:
@@ -60,7 +61,7 @@ def _matches(graph: CodeGraph, symbol: str) -> list[str]:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="mql5-codegraph", description="MQL5 static code graph indexer")
-    parser.add_argument("--version", action="version", version="%(prog)s 0.2.0")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     analyze = subcommands.add_parser("analyze", help="Analyze an MQL5 source tree")
