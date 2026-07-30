@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from pathlib import Path
+from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any, Mapping, Sequence
 
 from ..analysis_budget import AnalysisBudget
@@ -109,22 +109,44 @@ class DashboardApi:
         if not isinstance(payload, dict):
             raise ApiError(400, "invalid_body", "Request body must be a JSON object")
         root = payload.get("root")
-        include_roots = payload.get("include_roots", [])
+        include_roots = payload.get("include_roots")
         max_work = payload.get("max_work")
-        if not isinstance(root, str) or not root.strip():
-            raise ApiError(400, "invalid_root", "root must be a non-empty directory path")
-        if not isinstance(include_roots, list) or not all(isinstance(path, str) for path in include_roots):
+        authorized_root, authorized_includes = self.state.analysis_authority()
+        if authorized_root is None:
+            raise ApiError(
+                409,
+                "analysis_not_authorized",
+                "Start the dashboard with --root to authorize repository analysis",
+            )
+        if root is not None and (
+            not isinstance(root, str) or root.strip() != authorized_root
+        ):
+            raise ApiError(
+                403,
+                "root_not_authorized",
+                "Requested root does not match the operator-authorized repository",
+            )
+        if include_roots is not None and (
+            not isinstance(include_roots, list)
+            or not all(isinstance(path, str) for path in include_roots)
+        ):
             raise ApiError(400, "invalid_include_roots", "include_roots must be an array of paths")
+        if include_roots is not None and [
+            path.strip() for path in include_roots
+        ] != authorized_includes:
+            raise ApiError(
+                403,
+                "include_roots_not_authorized",
+                "Requested include roots do not match the operator-authorized roots",
+            )
         try:
             AnalysisBudget(max_work)
         except ValueError as error:
             raise ApiError(400, "invalid_max_work", str(error)) from error
         try:
-            job = self.state.start_analysis(
-                root.strip(),
-                include_roots,
-                max_work=max_work,
-            )
+            job = self.state.start_analysis(max_work=max_work)
+        except PermissionError as error:
+            raise ApiError(409, "analysis_not_authorized", str(error)) from error
         except ValueError as error:
             raise ApiError(400, "invalid_root", str(error)) from error
         except RuntimeError as error:
@@ -266,20 +288,33 @@ class DashboardApi:
         return kernel.execute(body).to_dict()
 
     def source(self, params: Mapping[str, Sequence[str]]) -> dict[str, object]:
-        _, root, version = self._graph()
-        if root is None:
-            raise ApiError(409, "root_not_ready", "Active repository root is unavailable")
         relative = (_single(params, "file", "") or "").strip().replace("\\", "/")
         if not relative:
             raise ApiError(400, "missing_file", "file is required")
         line = _bounded_int(_single(params, "line"), 1, 1, 10_000_000, "line")
-        candidate = (root / relative).resolve()
+        posix_path = PurePosixPath(relative)
+        windows_path = PureWindowsPath(relative)
+        if (
+            posix_path.is_absolute()
+            or windows_path.is_absolute()
+            or bool(windows_path.drive)
+            or ".." in posix_path.parts
+        ):
+            raise ApiError(403, "source_outside_root", "Source path is outside the active repository")
+        if posix_path.suffix.lower() not in {".mq5", ".mqh"}:
+            raise ApiError(403, "source_type_denied", "Only .mq5 and .mqh source files may be read")
+        ready, root, version, candidate = self.state.source_snapshot(relative)
+        if not ready:
+            raise ApiError(409, "graph_not_ready", "Analyze a repository before using this endpoint")
+        if root is None:
+            raise ApiError(409, "root_not_ready", "Active repository root is unavailable")
+        if candidate is None:
+            raise ApiError(404, "source_not_indexed", f"Source file {relative!r} is not indexed")
+        candidate = candidate.resolve()
         try:
-            candidate.relative_to(root.resolve())
+            candidate.relative_to(root)
         except ValueError as error:
             raise ApiError(403, "source_outside_root", "Source path is outside the active repository") from error
-        if candidate.suffix.lower() not in {".mq5", ".mqh"}:
-            raise ApiError(403, "source_type_denied", "Only .mq5 and .mqh source files may be read")
         if not candidate.is_file():
             raise ApiError(404, "source_not_found", f"Source file {relative!r} was not found")
         size = candidate.stat().st_size

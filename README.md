@@ -164,7 +164,9 @@ mql5-codegraph serve --root C:\work\Example-MQL5
 The dashboard provides interactive graph navigation, symbol search, context and impact traversal,
 diagnostic filtering, and safe source evidence. It is a loopback-only, unauthenticated local tool: non-loopback
 binds are rejected, request authorities are validated, idle reads time out after two seconds, and every
-request read has a ten-second absolute deadline. It does not upload source.
+request read has a ten-second absolute deadline. Repository and include-root authority comes only from
+the startup CLI; browser requests cannot change it, and the source viewer can read only indexed MQL5
+files under that root. It does not upload source.
 
 ## Development
 

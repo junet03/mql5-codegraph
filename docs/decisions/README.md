@@ -14,3 +14,4 @@ as Proposed, Accepted, Superseded, or Deprecated, and link the superseding recor
 | [ADR-0007](ADR-0007-compiler-evidence-correlation.md) | Accepted | Correlate bounded supplied compiler logs without compiler process control |
 | [ADR-0008](ADR-0008-authoritative-reference-corpus.md) | Accepted | Keep authoritative references page-aware and Graphify optional |
 | [ADR-0009](ADR-0009-graphify-credential-isolation.md) | Accepted | Give Graphify only runtime and selected-backend environment values |
+| [ADR-0010](ADR-0010-dashboard-filesystem-authority.md) | Accepted | Bind dashboard filesystem access to startup authority |

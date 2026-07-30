@@ -17,9 +17,12 @@ Useful options:
 - `--no-browser` starts without opening the default browser.
 - `--host` accepts only loopback addresses. Remote exposure is not a supported dashboard mode.
 
+Repository and include roots are authorized only by these startup arguments. The browser displays them
+read-only, and changing either path requires restarting the process.
+
 ## Product workflow
 
-1. Enter a source root and optional MetaTrader include root.
+1. Start the process with a source root and optional MetaTrader include root.
 2. Analyze or re-index. A failed re-index retains the last valid graph.
 3. Search for a symbol or inspect the repository projection.
 4. Select nodes to view evidence, incoming/outgoing relationships, context, and upstream impact.
@@ -36,7 +39,9 @@ canonical graph. This separates analysis scale from visualization scale.
 - Request bodies are limited to 64 KiB.
 - Request reads have a two-second idle timeout and a ten-second absolute deadline, so a slow-drip client
   cannot retain a finite request slot indefinitely.
-- Source reads accept only `.mq5` and `.mqh` files contained under the active repository root.
+- HTTP requests cannot add or change the startup-authorized repository and include roots.
+- Source reads select only indexed `.mq5` and `.mqh` files from the active graph, then re-resolve and
+  recheck containment, type, and size at request time.
 - Saved graph metadata is not trusted to select that source root. Loading `--graph` without an explicit
   `--root` leaves intelligence available but disables the source viewer.
 - Source viewer files are capped at 2 MiB.

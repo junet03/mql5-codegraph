@@ -10,9 +10,6 @@ import { Inspector } from "./components/Inspector";
 import { SearchPalette } from "./components/SearchPalette";
 import { SourceViewer } from "./components/SourceViewer";
 
-const DEFAULT_ROOT = "D:\\Antigravity-MQL5";
-const DEFAULT_INCLUDE = "C:\\Program Files\\MetaTrader 5 Live\\MQL5\\Include";
-
 function metric(value: number | undefined): string {
   return (value ?? 0).toLocaleString("en-US");
 }
@@ -24,8 +21,8 @@ export default function App() {
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [diagnosticTotal, setDiagnosticTotal] = useState(0);
   const [severity, setSeverity] = useState("");
-  const [root, setRoot] = useState(DEFAULT_ROOT);
-  const [includeRoot, setIncludeRoot] = useState(DEFAULT_INCLUDE);
+  const [root, setRoot] = useState("");
+  const [includeRoot, setIncludeRoot] = useState("");
   const [selectedKinds, setSelectedKinds] = useState<string[]>([]);
   const [selectedRelationships, setSelectedRelationships] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
@@ -60,7 +57,9 @@ export default function App() {
     try {
       const next = await api.status();
       setStatus(next);
-      if (next.root) setRoot(next.root);
+      const job = next.active_job ?? next.recent_jobs[0];
+      setRoot(next.root ?? job?.root ?? "");
+      setIncludeRoot(job?.include_roots[0] ?? "");
       return next;
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -94,8 +93,7 @@ export default function App() {
     setError(null);
     setSelected(null);
     try {
-      const includes = includeRoot.trim() ? [includeRoot.trim()] : [];
-      const response = await api.analyze(root.trim(), includes);
+      const response = await api.analyze();
       setStatus((current) => current ? { ...current, active_job: response.job } : current);
       await refreshStatus();
     } catch (reason) {
@@ -166,8 +164,8 @@ export default function App() {
         <aside className="left-rail">
           <section className="repo-card">
             <div className="section-kicker"><FolderGit2 size={15} /> Repository</div>
-            <label>Source root<input value={root} onChange={(event) => setRoot(event.target.value)} /></label>
-            <label>MT5 include root<input value={includeRoot} onChange={(event) => setIncludeRoot(event.target.value)} /></label>
+            <label>Authorized source root<input value={root} readOnly placeholder="Start with --root" /></label>
+            <label>Authorized MT5 include root<input value={includeRoot} readOnly placeholder="Optional --include-root" /></label>
             <button className="analyze-button" onClick={analyze} disabled={isAnalyzing || !root.trim()}>
               {isAnalyzing ? <LoaderCircle className="spin" size={16} /> : <Play size={15} fill="currentColor" />}
               {isAnalyzing ? "Building intelligence…" : status?.ready ? "Re-index repository" : "Analyze repository"}

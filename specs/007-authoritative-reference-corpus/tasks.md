@@ -160,6 +160,8 @@ confirm package contents include code/docs/notices but no PDF or generated corpu
 - [X] T034 Audit tracked history, release artifacts, Python dependencies, bundled web dependencies, and static security findings
 - [X] T035 Prepare versioned public-release metadata, third-party notices, acknowledgements, community links, and durable release notes
 - [ ] T036 Run the complete Python/web/package/Graphify release gate and publish v0.3.0 only after hosted protections pass
+- [X] T037 Bind dashboard analysis and source reads to operator-authorized startup paths and add regression coverage
+- [ ] T038 Clear the first public CodeQL findings through source fixes, then rerun all hosted release gates
 
 ---
 

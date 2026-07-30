@@ -100,10 +100,10 @@ function params(values: Record<string, string | number | string[] | undefined>):
 
 export const api = {
   status: () => request<DashboardStatus>("/api/status"),
-  analyze: (root: string, includeRoots: string[]) =>
+  analyze: () =>
     request<{ job: AnalysisJob }>("/api/analyze", {
       method: "POST",
-      body: JSON.stringify({ root, include_roots: includeRoots }),
+      body: JSON.stringify({}),
     }),
   job: (id: string) => request<{ job: AnalysisJob }>(`/api/jobs/${encodeURIComponent(id)}`),
   graph: (filters: { kinds?: string[]; relationships?: string[]; q?: string; limit?: number } = {}) =>

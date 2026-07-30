@@ -17,7 +17,7 @@ as an interactive graph without learning graph query syntax.
 
 **Why this priority**: Visual comprehension is the primary product value beyond the existing CLI.
 
-**Independent Test**: Start the dashboard, analyze the reference fixture, and inspect graph nodes,
+**Independent Test**: Start the dashboard with the reference fixture, analyze it, and inspect graph nodes,
 relationships, summary metrics, and an event-handler detail panel in one browser session.
 
 **Acceptance Scenarios**:
@@ -81,14 +81,16 @@ the reported line while preventing access outside the active repository.
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide a `serve` command that starts a local dashboard on loopback by default.
-- **FR-002**: Users MUST be able to submit a local repository and optional include roots for background analysis.
+- **FR-002**: Users MUST authorize a local repository and optional include roots at process startup for
+  background analysis and re-indexing.
 - **FR-003**: The dashboard MUST show analysis state, summary metrics, graph health, and diagnostic counts.
 - **FR-004**: The dashboard MUST render a directed interactive graph with node-kind and relationship filters.
 - **FR-005**: Users MUST be able to search, focus, select, pan, zoom, fit, and reset the graph by keyboard or pointer.
 - **FR-006**: Selected-node details MUST expose source evidence, attributes, incoming edges, and outgoing edges.
 - **FR-007**: Users MUST be able to request bounded context and upstream impact for a selected symbol.
 - **FR-008**: Users MUST be able to filter diagnostics by severity/code and navigate to source evidence.
-- **FR-009**: Source access MUST be restricted to `.mq5` and `.mqh` files under the active analysis root.
+- **FR-009**: Source access MUST be restricted to indexed `.mq5` and `.mqh` files under the
+  startup-authorized analysis root.
 - **FR-010**: The server MUST reject oversized or malformed request bodies with structured errors.
 - **FR-011**: The server MUST keep the full canonical graph while returning bounded visualization payloads.
 - **FR-012**: The frontend MUST provide responsive empty, loading, success, and error states.

@@ -40,7 +40,8 @@ lookup and adjacency tables from one graph snapshot. `IntelligenceKernel` owns:
 - contract version negotiation, completion semantics, and stable normalized errors.
 
 One kernel instance observes one immutable graph identity. `DashboardState` atomically publishes the graph,
-kernel, repository root, and revision, so a request cannot mix snapshots during reload.
+kernel, operator-authorized repository root, indexed-source allowlist, and revision, so a request cannot
+mix snapshots during reload or broaden filesystem access through HTTP input.
 
 Analysis semantics must not be implemented in CLI, Web, or the MCP adapter. Adapters may normalize
 transport-derived defaults, map HTTP status or CLI exit codes, and preserve legacy projections.

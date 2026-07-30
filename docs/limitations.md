@@ -44,7 +44,8 @@ compiler artifacts, or claim compiler/runtime parity.
   This controls slow-drip slot retention but does not impose a wall-clock deadline on completed analysis work.
 - Include resolution rejects absolute, drive-qualified, UNC, and canonically escaping targets before a
   filesystem existence probe. Explicit include roots remain approved read boundaries.
-- Saved graph metadata cannot authorize source reads. The source viewer requires an explicit active root.
+- Saved graph metadata cannot authorize source reads. The source viewer requires an explicit startup root,
+  selects only indexed MQL5 files, and rechecks containment after resolving the selected path.
 - Parser range membership, nested-argument scans, binding-list scans, and ambiguous call-edge fan-out
   consume the analyzer-wide deterministic work budget. Exhaustion prevents a partial graph from being
   returned or published, but it is not a universal wall-clock guarantee or a performance claim.

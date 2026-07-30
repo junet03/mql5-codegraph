@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from threading import RLock, Thread
 from typing import Callable, Iterable
 from uuid import uuid4
@@ -18,6 +18,33 @@ from ..intelligence import IntelligenceKernel
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _source_paths(graph: CodeGraph, root: Path | None) -> dict[str, Path]:
+    if root is None:
+        return {}
+    paths: dict[str, Path] = {}
+    for node in graph.nodes.values():
+        if node.kind != "file":
+            continue
+        relative = node.qualified_name.replace("\\", "/")
+        posix_path = PurePosixPath(relative)
+        windows_path = PureWindowsPath(relative)
+        if (
+            posix_path.is_absolute()
+            or windows_path.is_absolute()
+            or bool(windows_path.drive)
+            or ".." in posix_path.parts
+        ):
+            continue
+        candidate = (root / Path(*posix_path.parts)).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError:
+            continue
+        if candidate.suffix.lower() in {".mq5", ".mqh"}:
+            paths[relative] = candidate
+    return paths
 
 
 @dataclass(slots=True)
@@ -55,13 +82,25 @@ class DashboardState:
         self,
         analyzer: Callable[[str | Path, Iterable[str | Path]], CodeGraph] = analyze_repository,
         max_jobs: int = 20,
+        *,
+        authorized_root: str | Path | None = None,
+        authorized_include_roots: Iterable[str | Path] = (),
     ) -> None:
         self._lock = RLock()
         self._analyzer = analyzer
         self._max_jobs = max_jobs
+        self._authorized_root = (
+            Path(authorized_root).resolve()
+            if authorized_root is not None
+            else None
+        )
+        self._authorized_include_roots = tuple(
+            Path(path).resolve() for path in authorized_include_roots
+        )
         self._graph: CodeGraph | None = None
         self._kernel: IntelligenceKernel | None = None
         self._root: Path | None = None
+        self._source_paths: dict[str, Path] = {}
         self._graph_version = 0
         self._active_job_id: str | None = None
         self._jobs: OrderedDict[str, AnalysisJob] = OrderedDict()
@@ -69,27 +108,31 @@ class DashboardState:
 
     def load_graph(self, graph: CodeGraph, root: str | Path | None = None) -> None:
         resolved_root = Path(root).resolve() if root is not None else None
+        source_paths = _source_paths(graph, resolved_root)
         with self._lock:
             revision = self._graph_version + 1
             kernel = IntelligenceKernel(graph, snapshot_revision=revision)
             self._graph = graph
             self._kernel = kernel
             self._root = resolved_root
+            self._source_paths = source_paths
             self._graph_version = revision
             self._last_error = None
 
     def start_analysis(
         self,
-        root: str | Path,
-        include_roots: Iterable[str | Path] = (),
         *,
         max_work: int | None = None,
     ) -> AnalysisJob:
-        resolved_root = Path(root).resolve()
+        resolved_root = self._authorized_root
+        if resolved_root is None:
+            raise PermissionError(
+                "Repository analysis is not authorized; start the dashboard with --root"
+            )
         if not resolved_root.is_dir():
             raise ValueError(f"Repository directory does not exist: {resolved_root}")
         AnalysisBudget(max_work)
-        resolved_includes = [str(Path(path).resolve()) for path in include_roots]
+        resolved_includes = [str(path) for path in self._authorized_include_roots]
         with self._lock:
             if self._active_job_id is not None:
                 raise RuntimeError("An analysis job is already running")
@@ -123,12 +166,15 @@ class DashboardState:
                 "diagnostics": len(graph.diagnostics),
                 "source_fingerprint": graph.metadata.get("source_fingerprint"),
             }
+            resolved_root = Path(job.root)
+            source_paths = _source_paths(graph, resolved_root)
             with self._lock:
                 revision = self._graph_version + 1
                 kernel = IntelligenceKernel(graph, snapshot_revision=revision)
                 self._graph = graph
                 self._kernel = kernel
-                self._root = Path(job.root)
+                self._root = resolved_root
+                self._source_paths = source_paths
                 self._graph_version = revision
                 self._last_error = None
                 job.status = "completed"
@@ -162,6 +208,24 @@ class DashboardState:
     def snapshot(self) -> tuple[CodeGraph | None, Path | None, int]:
         with self._lock:
             return self._graph, self._root, self._graph_version
+
+    def analysis_authority(self) -> tuple[str | None, list[str]]:
+        return (
+            str(self._authorized_root) if self._authorized_root else None,
+            [str(path) for path in self._authorized_include_roots],
+        )
+
+    def source_snapshot(
+        self,
+        relative: str,
+    ) -> tuple[bool, Path | None, int, Path | None]:
+        with self._lock:
+            return (
+                self._graph is not None,
+                self._root,
+                self._graph_version,
+                self._source_paths.get(relative),
+            )
 
     def intelligence_snapshot(
         self,

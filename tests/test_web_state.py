@@ -23,8 +23,8 @@ def wait_for_job(state: DashboardState, job_id: str, timeout: float = 3.0):
 
 class DashboardStateTests(TestCase):
     def test_analysis_replaces_graph_atomically(self) -> None:
-        state = DashboardState()
-        job = state.start_analysis(FIXTURE)
+        state = DashboardState(authorized_root=FIXTURE)
+        job = state.start_analysis()
         finished = wait_for_job(state, job.id)
         graph, root, version = state.snapshot()
         self.assertEqual("completed", finished.status)
@@ -40,10 +40,10 @@ class DashboardStateTests(TestCase):
             release.wait(2)
             return CodeGraph({"file_count": 0})
 
-        state = DashboardState(analyzer=slow_analyzer)
-        first = state.start_analysis(FIXTURE)
+        state = DashboardState(analyzer=slow_analyzer, authorized_root=FIXTURE)
+        first = state.start_analysis()
         with self.assertRaisesRegex(RuntimeError, "already running"):
-            state.start_analysis(FIXTURE)
+            state.start_analysis()
         release.set()
         self.assertEqual("completed", wait_for_job(state, first.id).status)
 
@@ -57,10 +57,10 @@ class DashboardStateTests(TestCase):
                 raise ValueError("synthetic failure")
             return CodeGraph({"file_count": 1})
 
-        state = DashboardState(analyzer=analyzer)
-        wait_for_job(state, state.start_analysis(FIXTURE).id)
+        state = DashboardState(analyzer=analyzer, authorized_root=FIXTURE)
+        wait_for_job(state, state.start_analysis().id)
         original, _, version = state.snapshot()
-        failed = wait_for_job(state, state.start_analysis(FIXTURE).id)
+        failed = wait_for_job(state, state.start_analysis().id)
         current, _, current_version = state.snapshot()
         self.assertEqual("failed", failed.status)
         self.assertIs(original, current)
@@ -68,11 +68,11 @@ class DashboardStateTests(TestCase):
         self.assertEqual("synthetic failure", state.status()["last_error"])
 
     def test_budget_exhaustion_keeps_previous_graph(self) -> None:
-        state = DashboardState()
-        completed = wait_for_job(state, state.start_analysis(FIXTURE).id)
+        state = DashboardState(authorized_root=FIXTURE)
+        completed = wait_for_job(state, state.start_analysis().id)
         original, _, version = state.snapshot()
 
-        exhausted = wait_for_job(state, state.start_analysis(FIXTURE, max_work=1).id)
+        exhausted = wait_for_job(state, state.start_analysis(max_work=1).id)
         current, _, current_version = state.snapshot()
 
         self.assertEqual("completed", completed.status)
@@ -122,11 +122,17 @@ class DashboardStateTests(TestCase):
                 raise ValueError("reload failed")
             return CodeGraph({"source_fingerprint": "stable"})
 
-        state = DashboardState(analyzer=analyzer)
-        wait_for_job(state, state.start_analysis(FIXTURE).id)
+        state = DashboardState(analyzer=analyzer, authorized_root=FIXTURE)
+        wait_for_job(state, state.start_analysis().id)
         before = state.intelligence_snapshot()
-        wait_for_job(state, state.start_analysis(FIXTURE).id)
+        wait_for_job(state, state.start_analysis().id)
         after = state.intelligence_snapshot()
         self.assertIs(before[0], after[0])
         self.assertIs(before[1], after[1])
         self.assertEqual(before[3], after[3])
+
+    def test_analysis_requires_an_operator_authorized_root(self) -> None:
+        state = DashboardState()
+
+        with self.assertRaisesRegex(PermissionError, "--root"):
+            state.start_analysis()

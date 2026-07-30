@@ -38,6 +38,10 @@ especially useful when they concern:
 - unintended MCP source writes, persistence, or network access;
 - evidence, ambiguity, or freshness being silently misrepresented.
 
+The dashboard accepts filesystem authority only from its startup CLI arguments. HTTP re-index requests
+cannot change the authorized repository or include roots, and source reads select only indexed `.mq5` or
+`.mqh` files from the active graph before containment, type, and size are rechecked.
+
 Analyzer-wide work budgets are implemented, but hosted, multi-tenant, and untrusted-repository ingestion
 remain unsupported until the remaining isolation, authentication, and adversarial-scaling boundaries are
 designed and verified.

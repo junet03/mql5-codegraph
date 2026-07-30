@@ -40,6 +40,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Graphify version probes now receive no provider credential, and semantic extraction receives only
   runtime values plus environment variables for the explicitly selected backend.
+- Dashboard HTTP requests can no longer add or change filesystem roots; source reads select only indexed
+  MQL5 files within the operator-authorized startup root.
 - Stable graph IDs retain their existing SHA-1 serialization while explicitly marking the digest as
   non-security use for static-analysis tooling.
 

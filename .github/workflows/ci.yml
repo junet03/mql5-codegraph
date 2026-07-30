@@ -69,6 +69,16 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build bundled dashboard
+        run: |
+          npm --prefix web ci
+          npm --prefix web run build
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
         with:
@@ -80,6 +90,8 @@ jobs:
         run: python -m build
       - name: Validate metadata
         run: python -m twine check dist/*
+      - name: Verify release payload
+        run: python tools/verify_release_artifact.py dist/*.whl
       - name: Upload distributions
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:

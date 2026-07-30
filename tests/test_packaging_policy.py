@@ -81,6 +81,15 @@ class PackagingPolicyTests(unittest.TestCase):
         self.assertIn("Lucide React 0.468.0", notice)
         self.assertIn("React 19.2.6", notice)
 
+    def test_package_ci_builds_and_verifies_dashboard_assets(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("Build bundled dashboard", workflow)
+        self.assertIn("npm --prefix web run build", workflow)
+        self.assertIn("tools/verify_release_artifact.py dist/*.whl", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

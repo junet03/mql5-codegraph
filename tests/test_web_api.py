@@ -28,8 +28,8 @@ FIXTURE = Path(__file__).parent / "fixtures" / "basic_ea"
 
 
 def ready_state() -> DashboardState:
-    state = DashboardState()
-    job = state.start_analysis(FIXTURE)
+    state = DashboardState(authorized_root=FIXTURE)
+    job = state.start_analysis()
     deadline = monotonic() + 3
     while monotonic() < deadline:
         current = state.get_job(job.id)
@@ -84,6 +84,29 @@ class DashboardApiTests(TestCase):
         self.assertEqual(409, unavailable.exception.status)
         self.assertEqual("root_not_ready", unavailable.exception.code)
 
+    def test_source_viewer_reads_only_files_published_in_the_graph(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            indexed = root / "Indexed.mq5"
+            excluded = root / "Excluded.mq5"
+            indexed.write_text("void OnTick() {}\n", encoding="utf-8")
+            excluded.write_text("string ApiToken = \"not-a-real-token\";\n", encoding="utf-8")
+            graph = build_graph(
+                [make_node("Indexed.mq5", kind="file", qualified_name="Indexed.mq5")]
+            )
+            state = DashboardState()
+            state.load_graph(graph, root)
+            api = DashboardApi(state)
+
+            self.assertIn(
+                "void OnTick",
+                api.source({"file": ["Indexed.mq5"]})["content"],
+            )
+            with self.assertRaises(ApiError) as raised:
+                api.source({"file": ["Excluded.mq5"]})
+            self.assertEqual(404, raised.exception.status)
+            self.assertEqual("source_not_indexed", raised.exception.code)
+
     def test_invalid_parameters_are_structured_errors(self) -> None:
         with self.assertRaises(ApiError) as missing:
             self.api.query({})
@@ -98,6 +121,23 @@ class DashboardApiTests(TestCase):
 
         self.assertEqual(400, raised.exception.status)
         self.assertEqual("invalid_max_work", raised.exception.code)
+
+    def test_analyze_rejects_paths_not_authorized_at_startup(self) -> None:
+        with self.assertRaises(ApiError) as root:
+            self.api.analyze({"root": str(FIXTURE.parent)})
+        self.assertEqual(403, root.exception.status)
+        self.assertEqual("root_not_authorized", root.exception.code)
+
+        with self.assertRaises(ApiError) as includes:
+            self.api.analyze({"include_roots": [str(FIXTURE.parent)]})
+        self.assertEqual(403, includes.exception.status)
+        self.assertEqual("include_roots_not_authorized", includes.exception.code)
+
+    def test_analyze_requires_a_startup_root(self) -> None:
+        with self.assertRaises(ApiError) as raised:
+            DashboardApi(DashboardState()).analyze({})
+        self.assertEqual(409, raised.exception.status)
+        self.assertEqual("analysis_not_authorized", raised.exception.code)
 
     def test_normalized_path_projects_defaults_and_evidence(self) -> None:
         source = make_node("OnTick", node_id="node:on-tick")
