@@ -87,6 +87,33 @@ class CompilerEvidenceTests(TestCase):
                 "SubmitOrder", report.diagnostics[1].correlation["qualified_name"]
             )
 
+    def test_foreign_absolute_diagnostic_paths_are_outside_on_every_host(self) -> None:
+        temporary, root, log_path = self._materialize("basic-success.log")
+        with temporary:
+            log_path.write_text(
+                "\n".join(
+                    [
+                        r"C:\outside\WindowsSecret.mqh(1,1) : error 106: unavailable",
+                        "/outside/PosixSecret.mqh(1,1) : error 107: unavailable",
+                        "Result: 2 errors, 0 warnings, 20 msec elapsed",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            os.utime(log_path, ns=(2_000_000_000, 2_000_000_000))
+
+            report = correlate_compiler_log(
+                analyze_repository(root), root, log_path, "BasicEA.mq5"
+            )
+
+            self.assertEqual(2, len(report.diagnostics))
+            self.assertTrue(
+                all(
+                    item.correlation["state"] == "outside_project"
+                    for item in report.diagnostics
+                )
+            )
+
     def test_utf16_bom_log_is_current_and_preserves_warning_evidence(self) -> None:
         temporary, root, log_path = self._materialize("basic-warnings.log")
         with temporary:

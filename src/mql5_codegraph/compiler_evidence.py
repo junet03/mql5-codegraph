@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 from typing import Any, Iterable
 
@@ -155,6 +155,14 @@ def _read_log(path: Path) -> tuple[bytes, str, bool]:
 def _diagnostic_location(root: Path, raw_path: str, line: int, column: int) -> SourceLocation | None:
     value = raw_path.strip().strip('"').strip("'")
     candidate = Path(value)
+    if (
+        not candidate.is_absolute()
+        and (
+            PureWindowsPath(value).is_absolute()
+            or PurePosixPath(value).is_absolute()
+        )
+    ):
+        return None
     candidate = candidate if candidate.is_absolute() else root / candidate
     try:
         relative = candidate.resolve().relative_to(root).as_posix()
