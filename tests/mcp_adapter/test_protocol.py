@@ -24,9 +24,13 @@ EXPECTED_TOOLS = {
     "get_context_package",
     "get_diagnostics",
     "get_impact",
+    "get_reference_excerpt",
     "index_project",
+    "load_reference_corpus",
     "project_status",
     "query_symbols",
+    "reference_status",
+    "search_reference",
 }
 
 
@@ -88,6 +92,15 @@ async def _exercise_protocol() -> None:
                     "revision": 0,
                 }:
                     raise AssertionError(empty_status.structuredContent)
+
+                empty_reference = await client.call_tool("reference_status", {})
+                if empty_reference.isError:
+                    raise AssertionError("reference_status unexpectedly failed")
+                if empty_reference.structuredContent != {
+                    "status": "not_loaded",
+                    "revision": 0,
+                }:
+                    raise AssertionError(empty_reference.structuredContent)
 
                 indexed = await client.call_tool(
                     "index_project",

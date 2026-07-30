@@ -7,6 +7,7 @@ from pathlib import Path
 from shutil import copy2, copytree
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 from xml.etree import ElementTree as ET
 
 from mql5_codegraph.analysis_budget import AnalysisBudgetExceeded
@@ -14,12 +15,153 @@ from mql5_codegraph.cli import run
 from mql5_codegraph.graph import SourceLocation
 
 from tests.intelligence.helpers import build_graph, make_edge, make_node
+from tests.reference_corpus.helpers import make_pdf
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "basic_ea"
 
 
 class CliTests(TestCase):
+    def test_reference_graphify_discloses_processing_boundary_before_adapter(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        expected = {
+            "contract_version": "1.0.0",
+            "corpus_fingerprint": "a" * 64,
+            "counts": {"nodes": 1, "edges": 0},
+            "evidence_class": "semantic_overlay_inference",
+            "manifest_sha256": "b" * 64,
+            "overlay_fingerprint": "c" * 64,
+            "processing_boundary": "remote",
+            "producer": {"name": "graphify", "version": "0.9.27"},
+            "reused": False,
+            "snapshot_path": "snapshots/" + "c" * 64,
+            "warnings": [],
+        }
+        with patch(
+            "mql5_codegraph.cli.build_graphify_overlay",
+            return_value=expected,
+        ) as adapter:
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                exit_code = run(
+                    [
+                        "reference",
+                        "graphify",
+                        "D:\\corpus",
+                        "--output",
+                        "D:\\overlay",
+                        "--graphify",
+                        "graphify",
+                        "--backend",
+                        "openai",
+                        "--processing-boundary",
+                        "remote",
+                        "--allow-remote",
+                        "--json",
+                    ]
+                )
+        self.assertEqual(0, exit_code)
+        self.assertEqual(expected, json.loads(stdout.getvalue()))
+        self.assertIn("corpus_content_may_leave_machine=true", stderr.getvalue())
+        request = adapter.call_args.args[0]
+        self.assertEqual("remote", request.processing_boundary)
+        self.assertTrue(request.allow_remote)
+
+    def test_reference_build_status_search_and_excerpt_share_one_contract(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            inputs = root / "pdfs"
+            corpus = root / "corpus"
+            inputs.mkdir()
+            make_pdf(
+                inputs / "mql5.pdf",
+                ["MQL5 Reference", "OrderSend sends a trade request."],
+                [("Reference", 0, None), ("OrderSend", 1, 0)],
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                build_exit = run(
+                    [
+                        "reference",
+                        "build",
+                        str(inputs),
+                        "--output",
+                        str(corpus),
+                        "--json",
+                    ]
+                )
+            self.assertEqual(0, build_exit)
+            self.assertEqual("", stderr.getvalue())
+            built = json.loads(stdout.getvalue())
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                status_exit = run(
+                    ["reference", "status", str(corpus), "--json"]
+                )
+            self.assertEqual(0, status_exit)
+            status = json.loads(stdout.getvalue())
+            self.assertEqual(
+                built["corpus_fingerprint"],
+                status["corpus_fingerprint"],
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                search_exit = run(
+                    [
+                        "reference",
+                        "search",
+                        str(corpus),
+                        "OrderSend",
+                        "--json",
+                    ]
+                )
+            self.assertEqual(0, search_exit)
+            search = json.loads(stdout.getvalue())
+            section_id = search["results"][0]["section"]["section_id"]
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                excerpt_exit = run(
+                    [
+                        "reference",
+                        "excerpt",
+                        str(corpus),
+                        section_id,
+                        "--max-chars",
+                        "80",
+                        "--json",
+                    ]
+                )
+            self.assertEqual(0, excerpt_exit)
+            excerpt = json.loads(stdout.getvalue())
+            self.assertEqual(
+                search["results"][0]["section"]["content_sha256"],
+                excerpt["section"]["content_sha256"],
+            )
+
+    def test_reference_errors_are_structured_on_stderr(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            exit_code = run(
+                [
+                    "reference",
+                    "status",
+                    "not-a-real-corpus",
+                    "--json",
+                ]
+            )
+        self.assertEqual(1, exit_code)
+        self.assertEqual("", stdout.getvalue())
+        self.assertEqual(
+            "invalid_reference_root",
+            json.loads(stderr.getvalue())["error"]["code"],
+        )
+
     def test_normalized_path_uses_outgoing_defaults_and_emits_evidence(self) -> None:
         source = make_node("OnTick", node_id="node:on-tick")
         target = make_node("CalculateLots", node_id="node:calculate-lots")

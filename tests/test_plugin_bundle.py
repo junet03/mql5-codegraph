@@ -13,6 +13,7 @@ EXPECTED_SKILLS = {
     "mql5-architecture",
     "mql5-change-impact",
     "mql5-project-onboarding",
+    "mql5-reference-research",
     "mql5-release-gate",
 }
 
@@ -48,6 +49,17 @@ class PluginBundleTests(unittest.TestCase):
         self.assertEqual("./skills/", manifest["skills"])
         self.assertEqual("./.mcp.json", manifest["mcpServers"])
         self.assertEqual(["Read"], manifest["interface"]["capabilities"])
+        self.assertIn("reference", manifest["description"].casefold())
+        self.assertIn(
+            "reference corpora",
+            manifest["interface"]["longDescription"].casefold(),
+        )
+        self.assertTrue(
+            any(
+                "reference corpus" in prompt.casefold()
+                for prompt in manifest["interface"]["defaultPrompt"]
+            )
+        )
         server = mcp["mcpServers"]["mql5-codegraph"]
         self.assertEqual("mql5-codegraph-mcp", server["command"])
         self.assertEqual([], server["args"])
@@ -94,6 +106,14 @@ class PluginBundleTests(unittest.TestCase):
                 skill,
                 name,
             )
+
+        reference_policy = PLUGIN / "references" / "reference-corpus.md"
+        self.assertTrue(reference_policy.is_file())
+        reference_skill = (
+            PLUGIN / "skills" / "mql5-reference-research" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("../../references/reference-corpus.md", reference_skill)
+        self.assertIn("expected_corpus_fingerprint", reference_skill)
 
     def test_consumer_quickstart_does_not_recommend_editable_runtime(self) -> None:
         quickstart = (

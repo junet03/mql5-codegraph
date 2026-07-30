@@ -24,6 +24,7 @@ mql5-codegraph-mcp = "mql5_codegraph.mcp.server:main"
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.28.1,<2"]
+reference = ["pypdf>=6.10,<7", "pypdfium2>=5.7.1,<6"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

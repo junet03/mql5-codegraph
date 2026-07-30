@@ -10,9 +10,13 @@ Before indexing, resolve a separate MQL5 project root explicitly selected by the
 target from the current directory, plugin path, package metadata, or an installed cache. If the proposed
 target is any toolchain location above, stop and request the real MQL5 project root.
 
+Before loading reference evidence, use only a complete corpus root explicitly selected by the operator.
+Never infer it from an MQL5 project, search arbitrary paths, or treat a generated corpus as editable
+plugin material.
+
 During a plugin workflow:
 
-1. Use only the bundled read-only MCP tools for CodeGraph intelligence.
+1. Use only the bundled read-only MCP tools for CodeGraph and reference intelligence.
 2. Do not apply patches, write files, run formatters or generators, install packages, or perform Git
    mutations in toolchain locations.
 3. Treat a request to change an MQL5 project as authorization only for that selected project and only

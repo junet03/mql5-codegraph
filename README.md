@@ -26,6 +26,7 @@ keeps inferred edges separate from source calls, and stores a deterministic back
 - Evidence-ranked directed paths and deterministic bounded structural context packages.
 - Partial results with diagnostics for incomplete or unresolved code.
 - Analyzer-wide deterministic work budgets that stop excessive indexing without publishing a partial graph.
+- An optional offline, page-aware corpus for user-owned MQL5 PDF references with deterministic cited search.
 
 ## Intelligence Kernel
 
@@ -48,11 +49,35 @@ and dashboard routes retain their frozen legacy shapes and defaults.
 Relationship results preserve direction, type, origin, confidence, source location, and explicit evidence
 state. Stored locations are references, not proof that a file is still present or unchanged.
 
+## Local authoritative reference corpus
+
+Install the optional builder, then transform your own local PDF copies outside the repository:
+
+```powershell
+python -m pip install "mql5-codegraph[reference]"
+mql5-codegraph reference build D:\mql5-pdf --output D:\mql5-knowledge\reference-corpus --json
+mql5-codegraph reference search D:\mql5-knowledge\reference-corpus OrderSend --json
+```
+
+The builder never downloads documents or invokes Graphify. It preserves source hashes, outline ancestry,
+physical PDF pages, extraction limitations, and exact excerpt spans in immutable content-addressed
+snapshots. The official language reference, general programming book, and specialist book receive
+distinct authority tiers; unknown documents remain unclassified.
+
+Keep PDFs and generated Markdown out of Git. They remain local derivatives subject to their source
+documents' rights and terms. See the complete
+[reference corpus guide](docs/reference-corpus.md), [v1 contract](specs/007-authoritative-reference-corpus/contracts/reference-corpus-v1.md),
+and [ADR-0008](docs/decisions/ADR-0008-authoritative-reference-corpus.md).
+
+An explicit external Graphify 0.9.x adapter can build a separate semantic overlay from normalized Markdown.
+Local processing currently requires Ollama; remote providers require `--processing-boundary remote
+--allow-remote`. Overlay inference is discovery evidence, never a normative document citation.
+
 ## Private Codex plugin (experimental)
 
-The repository includes `mql5-codegraph-intelligence`, a private local Codex plugin with four MQL5
-workflow skills and nine read-only MCP tools. It projects the same Intelligence Kernel contract and does
-not edit source, persist an index, or use the network.
+The repository includes `mql5-codegraph-intelligence`, a private local Codex plugin with five MQL5
+workflow skills and 13 read-only MCP tools. It projects the same Intelligence Kernel and reference-corpus
+contracts and does not edit source, persist an index, build a corpus, invoke Graphify, or use the network.
 
 ```powershell
 uvx --from build pyproject-build
@@ -65,8 +90,10 @@ codex plugin add mql5-codegraph-intelligence@mql5-codegraph-internal
 The wheel install is intentionally non-editable so the MCP runtime does not import live code from this
 source checkout. Start a fresh Codex task in the actual MQL5 project, not in this plugin repository. The
 agent should call `project_status`, index an explicitly trusted project root when needed, and re-index
-after source changes. The plugin is an internal alpha, not a stable public MCP contract, and is not
-approved for hosted or untrusted-repository ingestion.
+after source changes. For platform-document questions, it separately calls `reference_status`, attaches
+only an operator-selected complete corpus, and preserves the corpus fingerprint in follow-up calls. The
+plugin is an internal alpha, not a stable public MCP contract, and is not approved for hosted or
+untrusted-repository ingestion.
 
 The MCP entry point emits bounded JSON lifecycle records to stderr only. These distinguish startup,
 clean stdio EOF, and unhandled server failure without exposing project roots or source. If Codex reports
@@ -125,14 +152,15 @@ request read has a ten-second absolute deadline. It does not upload source.
 ## Development
 
 ```powershell
-python -m pip install -e .
+python -m pip install -e ".[reference,mcp]"
 python -m unittest discover -s tests -v
 mql5-codegraph analyze tests/fixtures/basic_ea --output build/basic-ea.json
 mql5-codegraph status build/basic-ea.json --json
 ```
 
 See [architecture](docs/architecture.md), [known limitations](docs/limitations.md), and the
-[dashboard guide](docs/web-dashboard.md). Multi-session work is recorded in the
+[dashboard guide](docs/web-dashboard.md). Contributors and tools are thanked in
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md). Multi-session work is recorded in the
 [project journal](docs/project-journal/README.md), with durable choices tracked as
 [architecture decisions](docs/decisions/README.md).
 

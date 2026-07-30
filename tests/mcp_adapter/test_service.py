@@ -9,7 +9,9 @@ import unittest
 
 from mql5_codegraph.indexer import analyze_repository
 from mql5_codegraph.intelligence import IntelligenceKernel
-from mql5_codegraph.mcp.service import AdapterError, ProjectSession
+from mql5_codegraph.mcp.service import AdapterError, ProjectSession, ReferenceSession
+from mql5_codegraph.reference import BuildRequest, ReferenceCorpus, build_reference_corpus
+from tests.reference_corpus.helpers import make_pdf
 
 
 FIXTURE_ROOT = Path(__file__).parents[1] / "fixtures" / "basic_ea"
@@ -169,6 +171,74 @@ class ProjectSessionTests(unittest.TestCase):
             self.assertEqual("current", result["compiler_evidence"]["evidence_state"])
             self.assertEqual(indexed["revision"], session.project_status()["revision"])
             self.assertEqual(before, _fixture_hashes(root))
+
+
+class ReferenceSessionTests(unittest.TestCase):
+    def _build_corpus(self, root: Path) -> Path:
+        inputs = root / "pdfs"
+        corpus = root / "corpus"
+        inputs.mkdir()
+        make_pdf(
+            inputs / "mql5.pdf",
+            ["MQL5 Reference", "OrderSend sends a trade request."],
+            [("Reference", 0, None), ("OrderSend", 1, 0)],
+        )
+        build_reference_corpus(BuildRequest(inputs, corpus))
+        return corpus
+
+    def test_status_does_not_discover_or_load_implicitly(self) -> None:
+        session = ReferenceSession()
+        self.assertEqual(
+            {"status": "not_loaded", "revision": 0},
+            session.reference_status(),
+        )
+        with self.assertRaises(AdapterError) as raised:
+            session.search_reference("OrderSend")
+        self.assertEqual("reference_not_loaded", raised.exception.code)
+        with self.assertRaises(AdapterError) as relative:
+            session.load_reference_corpus("relative-corpus")
+        self.assertEqual("invalid_tool_arguments", relative.exception.code)
+
+    def test_load_search_and_excerpt_conform_to_the_reference_core(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            corpus_root = self._build_corpus(Path(directory))
+            core = ReferenceCorpus.open(corpus_root)
+            session = ReferenceSession()
+
+            loaded = session.load_reference_corpus(str(corpus_root))
+            actual = session.search_reference("OrderSend")
+            expected = core.search("OrderSend")
+            section_id = actual["results"][0]["section"]["section_id"]
+            excerpt = session.get_reference_excerpt(section_id, max_chars=80)
+
+            self.assertEqual(1, loaded["revision"])
+            self.assertEqual(core.corpus_fingerprint, loaded["corpus_fingerprint"])
+            self.assertEqual(expected, {k: v for k, v in actual.items() if k != "snapshot_revision"})
+            self.assertEqual(1, actual["snapshot_revision"])
+            self.assertEqual("reference_document", excerpt["evidence_class"])
+            self.assertTrue(session.load_reference_corpus(str(corpus_root))["reused"])
+
+    def test_failed_or_stale_load_preserves_the_active_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            corpus_root = self._build_corpus(Path(directory))
+            session = ReferenceSession()
+            loaded = session.load_reference_corpus(str(corpus_root))
+
+            with self.assertRaises(AdapterError) as missing:
+                session.load_reference_corpus(str(Path(directory) / "missing"))
+            self.assertEqual("invalid_reference_root", missing.exception.code)
+            self.assertEqual(loaded["revision"], session.reference_status()["revision"])
+
+            with self.assertRaises(AdapterError) as stale:
+                session.search_reference(
+                    "OrderSend",
+                    expected_corpus_fingerprint="0" * 64,
+                )
+            self.assertEqual("reference_snapshot_stale", stale.exception.code)
+            self.assertEqual(
+                loaded["corpus_fingerprint"],
+                session.reference_status()["corpus_fingerprint"],
+            )
 
 
 if __name__ == "__main__":

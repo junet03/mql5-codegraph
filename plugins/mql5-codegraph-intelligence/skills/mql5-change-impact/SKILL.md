@@ -11,6 +11,9 @@ the plugin, marketplace, package, cache, or MQL5 CodeGraph source path.
 
 Start with `$mql5-project-onboarding` when snapshot freshness is uncertain.
 
+When impact depends on a documented MQL5 API or runtime contract, use `$mql5-reference-research` and
+retain the separate [reference evidence class](../../references/reference-corpus.md).
+
 1. Resolve the target with `query_symbols`; never silently pick one ambiguous match.
 2. Call `get_impact` to identify upstream dependants under explicit depth and item bounds.
 3. Use `get_context` with `outgoing` to identify downstream dependencies and side-effect paths.

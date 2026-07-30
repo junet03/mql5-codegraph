@@ -1,0 +1,4 @@
+interface:
+  display_name: "MQL5 Reference Research"
+  short_description: "Search page-cited authoritative MQL5 references"
+  default_prompt: "Use $mql5-reference-research to answer this MQL5 platform question with page-cited reference evidence."

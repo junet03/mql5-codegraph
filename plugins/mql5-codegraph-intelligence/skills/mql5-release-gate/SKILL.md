@@ -18,7 +18,9 @@ Use `$mql5-project-onboarding` to establish a fresh snapshot, then:
    commands.
 4. Run the narrowest relevant checks first, then the strongest proportional suite available.
 5. If MetaEditor/terminal compilation is not connected, explicitly report it as not verified.
-6. Check the final diff and repository status; never include generated graphs, logs, credentials,
+6. For claims that depend on an MQL5 platform contract, use `$mql5-reference-research` and cite the
+   separate [reference evidence](../../references/reference-corpus.md).
+7. Check the final diff and repository status; never include generated graphs, logs, credentials,
    local terminal data, or MetaTrader files in a commit.
 
 Return one of:

@@ -17,6 +17,7 @@ from ..compiler_evidence import (
 from ..graph import CodeGraph
 from ..indexer import analyze_repository
 from ..intelligence import CONTRACT_VERSION, IntelligenceError, IntelligenceKernel
+from ..reference import ReferenceCorpus, ReferenceError
 
 
 class AdapterError(RuntimeError):
@@ -60,6 +61,15 @@ class ProjectSnapshot:
     revision: int
     graph: CodeGraph
     kernel: IntelligenceKernel
+
+
+@dataclass(frozen=True, slots=True)
+class ReferenceSnapshot:
+    """One successfully attached immutable local reference corpus."""
+
+    root: Path
+    revision: int
+    corpus: ReferenceCorpus
 
 
 class ProjectSession:
@@ -458,3 +468,153 @@ class ProjectSession:
                 "Compiler evidence correlation failed",
             ) from error
         return correlation_result(report, snapshot.kernel.graph_identity)
+
+
+class ReferenceSession:
+    """Own one active reference snapshot independently of the project graph."""
+
+    __slots__ = ("_load_lock", "_lock", "_snapshot")
+
+    def __init__(self) -> None:
+        self._load_lock = Lock()
+        self._lock = RLock()
+        self._snapshot: ReferenceSnapshot | None = None
+
+    @staticmethod
+    def _adapt_error(error: ReferenceError) -> AdapterError:
+        code = (
+            "invalid_tool_arguments"
+            if error.code == "invalid_reference_query"
+            else error.code
+        )
+        return AdapterError(code, error.message, error.details)
+
+    @staticmethod
+    def _status(snapshot: ReferenceSnapshot) -> dict[str, Any]:
+        result = snapshot.corpus.status()
+        result["revision"] = snapshot.revision
+        result["status"] = "loaded"
+        return result
+
+    def reference_status(self) -> dict[str, Any]:
+        with self._lock:
+            snapshot = self._snapshot
+        if snapshot is None:
+            return {"status": "not_loaded", "revision": 0}
+        return self._status(snapshot)
+
+    def load_reference_corpus(self, corpus_root: str) -> dict[str, Any]:
+        if not isinstance(corpus_root, str) or not corpus_root.strip():
+            raise AdapterError(
+                "invalid_tool_arguments",
+                "corpus_root must be a non-empty absolute local directory path",
+            )
+        try:
+            candidate = Path(corpus_root).expanduser()
+        except (OSError, RuntimeError) as error:
+            raise AdapterError(
+                "invalid_tool_arguments",
+                "corpus_root could not be resolved",
+            ) from error
+        if not candidate.is_absolute():
+            raise AdapterError(
+                "invalid_tool_arguments",
+                "corpus_root must be an absolute local directory path",
+            )
+        with self._load_lock:
+            try:
+                corpus = ReferenceCorpus.open(candidate)
+            except ReferenceError as error:
+                raise self._adapt_error(error) from error
+            with self._lock:
+                current = self._snapshot
+                if (
+                    current is not None
+                    and current.corpus.corpus_fingerprint == corpus.corpus_fingerprint
+                ):
+                    result = self._status(current)
+                    result["reused"] = True
+                    return result
+                replacement = ReferenceSnapshot(
+                    root=corpus.root,
+                    revision=1 if current is None else current.revision + 1,
+                    corpus=corpus,
+                )
+                self._snapshot = replacement
+            result = self._status(replacement)
+            result["reused"] = False
+            return result
+
+    def _active_snapshot(
+        self,
+        expected_corpus_fingerprint: str | None = None,
+    ) -> ReferenceSnapshot:
+        with self._lock:
+            snapshot = self._snapshot
+        if snapshot is None:
+            raise AdapterError(
+                "reference_not_loaded",
+                "Attach a complete local reference corpus before using reference tools",
+            )
+        if expected_corpus_fingerprint is not None:
+            if (
+                not isinstance(expected_corpus_fingerprint, str)
+                or not expected_corpus_fingerprint.strip()
+            ):
+                raise AdapterError(
+                    "invalid_tool_arguments",
+                    "expected_corpus_fingerprint must be a non-empty string or null",
+                )
+            if (
+                expected_corpus_fingerprint
+                != snapshot.corpus.corpus_fingerprint
+            ):
+                raise AdapterError(
+                    "reference_snapshot_stale",
+                    "Active reference corpus does not match the expected fingerprint",
+                    {
+                        "actual_corpus_fingerprint": snapshot.corpus.corpus_fingerprint,
+                        "expected_corpus_fingerprint": expected_corpus_fingerprint,
+                    },
+                )
+        return snapshot
+
+    def search_reference(
+        self,
+        query: str,
+        *,
+        limit: int = 20,
+        max_excerpt_chars: int = 1_200,
+        expected_corpus_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        snapshot = self._active_snapshot(expected_corpus_fingerprint)
+        try:
+            result = snapshot.corpus.search(
+                query,
+                limit=limit,
+                max_excerpt_chars=max_excerpt_chars,
+            )
+        except ReferenceError as error:
+            raise self._adapt_error(error) from error
+        result["snapshot_revision"] = snapshot.revision
+        return result
+
+    def get_reference_excerpt(
+        self,
+        section_id: str,
+        *,
+        start: int = 0,
+        max_chars: int = 1_200,
+        expected_corpus_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        snapshot = self._active_snapshot(expected_corpus_fingerprint)
+        try:
+            result = snapshot.corpus.excerpt(
+                section_id,
+                start=start,
+                max_chars=max_chars,
+            )
+        except ReferenceError as error:
+            raise self._adapt_error(error) from error
+        result["snapshot_revision"] = snapshot.revision
+        return result

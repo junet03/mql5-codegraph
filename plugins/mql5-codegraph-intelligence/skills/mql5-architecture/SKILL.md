@@ -9,6 +9,10 @@ Before any tool call, read and obey
 [the consumer safety boundary](../../references/consumer-safety.md). Never infer the analysis target from
 the plugin, marketplace, package, cache, or MQL5 CodeGraph source path.
 
+For language, API, standard-library, or MetaTrader platform-contract claims, use
+`$mql5-reference-research` and keep its
+[reference evidence](../../references/reference-corpus.md) separate from project relationships.
+
 Start with `$mql5-project-onboarding` when the active snapshot is missing, different, or stale.
 
 Use the bundled MCP tools in this order:

@@ -28,3 +28,7 @@ The index is in memory only. It does not modify source or persist graph files.
 
 Before a freshness-sensitive follow-up, compare the expected source fingerprint or re-index. Live
 source and tests remain more authoritative than the graph.
+
+Reference attachment is optional and independent. If the task needs MQL5 platform documentation, hand off
+to `$mql5-reference-research`; do not infer or discover a corpus path during project onboarding. See the
+[reference evidence rules](../../references/reference-corpus.md).

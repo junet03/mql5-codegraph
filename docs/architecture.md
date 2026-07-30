@@ -9,6 +9,14 @@ AnalysisBudget -> source discovery -> lexer -> structural parser -> repository r
                                          -> CLI/Web/private MCP adapters
 ```
 
+Reference documents use a separate evidence pipeline:
+
+```text
+operator-owned PDFs -> ReferenceBuilder -> immutable JSONL + Markdown snapshot
+                                      -> ReferenceCorpus -> CLI/private MCP reads
+                                      -> optional external Graphify 0.9.x overlay
+```
+
 The lexer owns source fidelity and recovery. The parser extracts declarations and call sites without
 requiring complete source. The resolver works across all parsed files, resolves includes and symbols,
 and records ambiguity rather than inventing certainty. Runtime enrichment adds terminal-driven event
@@ -37,6 +45,26 @@ kernel, repository root, and revision, so a request cannot mix snapshots during 
 Analysis semantics must not be implemented in CLI, Web, or the MCP adapter. Adapters may normalize
 transport-derived defaults, map HTTP status or CLI exit codes, and preserve legacy projections.
 
+## Authoritative reference boundary
+
+`ReferenceCorpus` is backend-neutral and independent of `CodeGraph` and `IntelligenceKernel`. Its
+content-addressed snapshot owns document hashes, authority declarations, physical page records,
+outline-derived sections, page-to-character spans, extraction states, and canonical file hashes. Search
+and excerpt semantics live in the reference core; CLI and MCP only normalize arguments and project results.
+
+A corpus build stages every file, validates page/section coverage and hashes, then renames the immutable
+snapshot and atomically replaces `current.json`. This pointer-based publication works on Windows without
+replacing a non-empty active directory. Failed builds and invalid MCP attachments keep the prior snapshot.
+
+The MCP process owns `ProjectSession` and `ReferenceSession` independently. Each has a revision and
+fingerprint. A response cannot promote reference content to a project edge, and an agent may require
+`expected_corpus_fingerprint` on follow-up calls.
+
+Graphify is not imported or vendored by the core. The explicit CLI adapter invokes an observed 0.9.x
+executable with `shell=False`, an explicit model backend/processing boundary, a timeout, and isolated
+output. Its artifacts are tied to one corpus fingerprint and always labeled
+`semantic_overlay_inference`. They never enter `ReferenceCorpus` or `CodeGraph`.
+
 ## Analysis work budget
 
 Each graph construction owns one deterministic `AnalysisBudget`. It is consumed across discovery,
@@ -53,7 +81,8 @@ dashboard and MCP publish replacements only after the full analysis succeeds.
 | `intelligence` CLI namespace | Intelligence contract `1.0.0` | Argument normalization and JSON/error projection |
 | `/api/v1/intelligence/*` | Intelligence contract `1.0.0` | Route defaults, HTTP status, JSON projection |
 | `compiler-evidence` CLI | Compiler evidence contract `1.0.0` | Read-only correlation of a supplied log with a saved graph |
-| Private MCP stdio alpha | Experimental nine-tool projection | One trusted in-memory snapshot and structured tool errors |
+| Reference CLI namespace | Reference contract `1.0.0` | Offline build, validation, cited search, excerpt, and explicit Graphify adapter |
+| Private MCP stdio alpha | Experimental 13-tool projection | Independent trusted project/reference snapshots and structured tool errors |
 | Legacy CLI and unversioned HTTP | Frozen historical shapes | Exact compatibility projector over the same snapshot |
 | GraphML and representation exporters | Canonical graph schema | Transform representation without reinterpreting semantics |
 
@@ -80,6 +109,16 @@ confidence, source location when known, and an explicit state:
 - `resolved`: a repository resolver linked an extracted reference;
 - `runtime`: documented MetaTrader runtime behavior, never a direct source call;
 - `inferred`: a weaker structural hypothesis that remains visibly distinct.
+
+Cross-domain evidence is also explicitly classified:
+
+- `code_graph`: canonical project-source relationships and diagnostics;
+- `reference_document`: cited text from one hashed document/section/physical-page span;
+- `external_compiler_evidence`: one supplied bounded compiler-log observation;
+- `semantic_overlay_inference`: disposable model-derived Graphify navigation.
+
+These classes may support one answer but are never merged into one identity or promoted into another
+class.
 
 Freshness state is separately `available`, `stale`, `unavailable`, or `unknown`. Locationless evidence is
 always unknown. Without a protected evidence probe, a stored source location remains unknown rather than

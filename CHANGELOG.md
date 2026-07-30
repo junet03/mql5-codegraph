@@ -16,6 +16,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - BOM-marked UTF-16 LE/BE MetaEditor compiler-log decoding, alongside UTF-8, with regression coverage.
 - Bounded MCP stdio lifecycle telemetry for startup, clean EOF, and unhandled failure, plus idle-session
   and crash-path regression coverage.
+- Offline page-aware corpora for operator-owned MQL5 PDF references, with immutable snapshots,
+  deterministic authority-aware search, physical-page citations, CLI and read-only MCP access, and an
+  optional isolated Graphify semantic overlay.
+- A fifth plugin workflow skill for cited MQL5 reference research and public operator/contributor
+  guidance covering evidence boundaries, local data ownership, extraction limits, and attribution.
 
 ## [0.2.0] - 2026-07-23
 

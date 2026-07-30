@@ -28,3 +28,6 @@ src/mql5_codegraph/web_static/
 output/
 *.codegraph.json
 *.graphml
+/reference-corpus/
+/reference-overlays/
+/local-references/

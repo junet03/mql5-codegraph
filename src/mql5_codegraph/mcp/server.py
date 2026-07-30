@@ -13,18 +13,21 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from .service import AdapterError, ProjectSession
+from .service import AdapterError, ProjectSession, ReferenceSession
 
 
 SERVER_NAME = "mql5-codegraph-intelligence"
 LIFECYCLE_PREFIX = "mql5-codegraph-mcp.lifecycle "
 SERVER_INSTRUCTIONS = (
-    "Local, read-only MQL5 project intelligence. Call project_status first. "
+    "Local, read-only MQL5 project and reference intelligence. Call project_status "
+    "and reference_status first. "
     "Call index_project only for a trusted absolute local project root, then "
-    "use bounded intelligence tools. Preserve ambiguity, evidence origin, "
-    "completion, truncation, and graph fingerprint in every claim. Re-index "
-    "after source changes. This experimental server never edits source, writes "
-    "indexes, or accesses the network."
+    "use bounded intelligence tools. Call load_reference_corpus only for an "
+    "operator-selected complete local corpus. Preserve ambiguity, evidence class, "
+    "origin, completion, truncation, graph fingerprint, and corpus fingerprint in "
+    "every claim. Re-index after source changes. This experimental server never "
+    "edits source, builds corpora, writes indexes, invokes Graphify, or accesses "
+    "the network."
 )
 READ_ONLY_ANNOTATIONS = ToolAnnotations(
     readOnlyHint=True,
@@ -78,10 +81,14 @@ def _call(method, /, *args, **kwargs) -> dict[str, Any]:
         raise ToolError(error.to_json()) from error
 
 
-def create_server(session: ProjectSession | None = None) -> FastMCP:
-    """Create one MCP server bound to one in-memory project session."""
+def create_server(
+    session: ProjectSession | None = None,
+    reference_session: ReferenceSession | None = None,
+) -> FastMCP:
+    """Create one MCP server bound to independent project/reference sessions."""
 
     project = session or ProjectSession()
+    references = reference_session or ReferenceSession()
     server = FastMCP(
         SERVER_NAME,
         instructions=SERVER_INSTRUCTIONS,
@@ -99,6 +106,76 @@ def create_server(session: ProjectSession | None = None) -> FastMCP:
     )
     def project_status() -> dict[str, Any]:
         return _call(project.project_status)
+
+    @server.tool(
+        name="reference_status",
+        description=(
+            "Report the active immutable reference-corpus snapshot without "
+            "discovering, building, or changing local files."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def reference_status() -> dict[str, Any]:
+        return _call(references.reference_status)
+
+    @server.tool(
+        name="load_reference_corpus",
+        description=(
+            "Attach an operator-selected complete absolute local reference corpus for "
+            "bounded read-only evidence queries. This never builds or repairs it."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def load_reference_corpus(corpus_root: str) -> dict[str, Any]:
+        return _call(references.load_reference_corpus, corpus_root)
+
+    @server.tool(
+        name="search_reference",
+        description=(
+            "Search deterministic page-cited reference-document evidence with "
+            "authority and explicit completion metadata."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def search_reference(
+        query: str,
+        limit: int = 20,
+        max_excerpt_chars: int = 1_200,
+        expected_corpus_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            references.search_reference,
+            query,
+            limit=limit,
+            max_excerpt_chars=max_excerpt_chars,
+            expected_corpus_fingerprint=expected_corpus_fingerprint,
+        )
+
+    @server.tool(
+        name="get_reference_excerpt",
+        description=(
+            "Return a bounded exact section excerpt with source hash, authority, "
+            "physical PDF pages, and character bounds."
+        ),
+        annotations=READ_ONLY_ANNOTATIONS,
+        structured_output=True,
+    )
+    def get_reference_excerpt(
+        section_id: str,
+        start: int = 0,
+        max_chars: int = 1_200,
+        expected_corpus_fingerprint: str | None = None,
+    ) -> dict[str, Any]:
+        return _call(
+            references.get_reference_excerpt,
+            section_id,
+            start=start,
+            max_chars=max_chars,
+            expected_corpus_fingerprint=expected_corpus_fingerprint,
+        )
 
     @server.tool(
         name="index_project",

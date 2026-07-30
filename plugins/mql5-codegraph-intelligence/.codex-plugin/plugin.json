@@ -1,7 +1,7 @@
 {
   "name": "mql5-codegraph-intelligence",
-  "version": "0.1.0+codex.20260730002910",
-  "description": "Evidence-backed local MQL5 intelligence with bounded compiler-log correlation",
+  "version": "0.1.0+codex.20260730223236",
+  "description": "Evidence-backed local MQL5 project and reference intelligence",
   "author": {
     "name": "MQL5 CodeGraph Contributors",
     "url": "https://github.com/junet03/mql5-codegraph"
@@ -12,14 +12,15 @@
     "mql5",
     "metatrader",
     "codegraph",
+    "reference-corpus",
     "static-analysis",
     "mcp"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "MQL5 CodeGraph Intelligence",
-    "shortDescription": "Navigate MQL5 projects with evidence-backed graph tools.",
-    "longDescription": "Index trusted local MQL5 repositories in memory, query symbols and relationships, trace impact and paths, correlate bounded compiler logs, and assemble AI context without modifying source files.",
+    "shortDescription": "Navigate MQL5 code and cited reference evidence.",
+    "longDescription": "Index trusted local MQL5 repositories in memory, attach operator-built reference corpora, query source relationships and page-cited documentation, trace impact and paths, correlate bounded compiler logs, and assemble AI context without modifying source or corpus files.",
     "developerName": "MQL5 CodeGraph Contributors",
     "category": "Developer Tools",
     "capabilities": [
@@ -28,6 +29,7 @@
     "defaultPrompt": [
       "Index this MQL5 project and explain its architecture.",
       "Trace the impact of changing this MQL5 symbol.",
+      "Search my attached MQL5 reference corpus with physical-page citations.",
       "Correlate this project's supplied MetaEditor compiler log.",
       "Run the MQL5 static-analysis release gate."
     ]
