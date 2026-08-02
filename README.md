@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/junet03/mql5-codegraph/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://deepwiki.com/junet03/mql5-codegraph"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-2EA44F.svg"></a>
   <img alt="Status: public beta" src="https://img.shields.io/badge/Status-Public%20Beta-2EA44F">
