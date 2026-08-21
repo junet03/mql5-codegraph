@@ -7,6 +7,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- Analysis-budget failures now identify analyzer work units explicitly, distinguish them from model-token
+  or account limits, and give agents an ordered narrow-scope-before-increase retry policy.
+
 ## [0.3.0] - 2026-07-30
 
 ### Added

@@ -31,6 +31,14 @@ class AnalysisBudgetExceeded(RuntimeError):
                 "phase": self.phase,
                 "work_used": self.work_used,
                 "work_limit": self.work_limit,
+                "budget_kind": "analyzer_work_units",
+                "not_model_token_limit": True,
+                "recommended_actions": [
+                    "narrow_project_root",
+                    "narrow_include_roots",
+                    "increase_max_work",
+                ],
+                "maximum_max_work": MAX_MAX_WORK,
             },
         }
 

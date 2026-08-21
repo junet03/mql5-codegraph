@@ -123,7 +123,9 @@ variables plus a small runtime allowlist. Unrelated host credentials are not inh
 Every source analysis has a deterministic work budget covering discovery, lexing, parsing, resolution,
 and runtime enrichment. The default is 1,000,000 units; use a value from 1 through 10,000,000 only for
 an unusually large trusted local project. Exhaustion returns `analysis_budget_exceeded`, identifies the
-phase and counters, and never writes/publishes a partial graph.
+phase and counters, marks the limit as analyzer work rather than model tokens, and returns ordered retry
+actions. Narrow the project root and include roots before increasing `max_work`; exhaustion never
+writes or publishes a partial graph.
 
 ```powershell
 mql5-codegraph analyze C:\work\Example-MQL5 --output build/example.codegraph.json --max-work 2000000 --json

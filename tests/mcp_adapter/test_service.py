@@ -87,6 +87,23 @@ class ProjectSessionTests(unittest.TestCase):
 
         self.assertEqual("analysis_budget_exceeded", raised.exception.code)
         self.assertEqual("source_discovery", raised.exception.details["phase"])
+        self.assertEqual(
+            "analyzer_work_units",
+            raised.exception.details["budget_kind"],
+        )
+        self.assertIs(True, raised.exception.details["not_model_token_limit"])
+        self.assertEqual(
+            [
+                "narrow_project_root",
+                "narrow_include_roots",
+                "increase_max_work",
+            ],
+            raised.exception.details["recommended_actions"],
+        )
+        self.assertEqual(
+            10_000_000,
+            raised.exception.details["maximum_max_work"],
+        )
         expected_status = dict(indexed)
         expected_status.pop("reused")
         self.assertEqual(expected_status, session.project_status())

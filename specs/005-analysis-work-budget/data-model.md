@@ -30,6 +30,10 @@ Represents the typed, recoverable failure emitted when the next accounted unit w
 | `phase` | The phase whose next work unit could not start |
 | `work_used` | Work consumed before rejection |
 | `work_limit` | Configured maximum for the request |
+| `budget_kind` | Stable discriminator: `analyzer_work_units` |
+| `not_model_token_limit` | Explicitly distinguishes analyzer work from model/account quotas |
+| `recommended_actions` | Ordered machine-readable retry policy: narrow root, narrow include roots, then increase work |
+| `maximum_max_work` | Maximum accepted explicit work limit |
 
 This entity contains no source contents, paths beyond the caller's existing root context, graph nodes,
 or partial evidence.

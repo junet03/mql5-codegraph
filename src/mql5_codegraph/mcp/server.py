@@ -181,7 +181,11 @@ def create_server(
         name="index_project",
         description=(
             "Read a trusted local MQL5 project into an in-memory graph snapshot. "
-            "This does not modify source or persist an index."
+            "This does not modify source or persist an index. Select the narrowest "
+            "project root and avoid broad MT5 standard-library include roots. "
+            "If analysis_budget_exceeded is returned, treat it as an analyzer work "
+            "limit rather than a model token or account quota; narrow root and "
+            "include_roots before increasing max_work."
         ),
         annotations=READ_ONLY_ANNOTATIONS,
         structured_output=True,

@@ -30,12 +30,22 @@ envelope:
   "details": {
     "phase": "resolution",
     "work_used": 100,
-    "work_limit": 100
+    "work_limit": 100,
+    "budget_kind": "analyzer_work_units",
+    "not_model_token_limit": true,
+    "recommended_actions": [
+      "narrow_project_root",
+      "narrow_include_roots",
+      "increase_max_work"
+    ],
+    "maximum_max_work": 10000000
   }
 }
 ```
 
-The message text is human-readable; callers must use `code` and `details` for automation.
+The message text is human-readable; callers must use `code` and `details` for automation. Retry actions
+are ordered: first restrict analysis to the selected MQL5 project, then remove broad standard-library
+include roots, and only then increase `max_work` for an unusually large trusted local project.
 
 ## Publication guarantee
 

@@ -32,7 +32,9 @@ MCP contract is declared.
 `index_project` additionally accepts `include_roots` and `excluded` arrays plus optional `max_work`.
 When omitted, source analysis uses 1,000,000 deterministic work units; values from 1 through 10,000,000
 are valid. Exhaustion returns `analysis_budget_exceeded` with `phase`, `work_used`, and `work_limit` and
-does not replace an active snapshot.
+does not replace an active snapshot. Its structured details identify `analyzer_work_units`, explicitly
+exclude model-token/account quota exhaustion, and order retry actions so callers narrow `root` and
+`include_roots` before increasing `max_work`.
 
 `correlate_compiler_log` uses the active snapshot's root and exclusions. Both paths must resolve inside
 that trusted root; it never launches MetaEditor, writes compiler artifacts, or changes the snapshot. Its
