@@ -1,0 +1,19 @@
+{
+  "name": "mql5-codegraph-marketplace",
+  "owner": {
+    "name": "junet03",
+    "url": "https://github.com/junet03"
+  },
+  "metadata": {
+    "description": "Evidence-backed static code graph intelligence for MQL5 repositories, with CLI, dashboard, reference corpus, and agent plugin.",
+    "homepage": "https://github.com/junet03/mql5-codegraph"
+  },
+  "plugins": [
+    {
+      "name": "mql5-codegraph-intelligence",
+      "version": "0.1.0",
+      "source": "./plugins/mql5-codegraph-intelligence",
+      "description": "Five MQL5 workflow skills and 13 read-only MCP tools over the mql5-codegraph Intelligence Kernel: project onboarding, architecture analysis, change impact, cited reference research, and the release gate."
+    }
+  ]
+}

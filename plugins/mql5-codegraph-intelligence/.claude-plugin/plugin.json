@@ -1,0 +1,19 @@
+{
+  "name": "mql5-codegraph-intelligence",
+  "version": "0.1.0",
+  "description": "Evidence-backed local MQL5 project and reference intelligence. Read-only skills and MCP tools over the mql5-codegraph Intelligence Kernel: index projects in memory, query source relationships with evidence, trace impact and paths, search cited reference corpora, and correlate compiler logs.",
+  "author": {
+    "name": "MQL5 CodeGraph Contributors",
+    "url": "https://github.com/junet03/mql5-codegraph"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mql5",
+    "metatrader",
+    "codegraph",
+    "reference-corpus",
+    "static-analysis",
+    "mcp"
+  ],
+  "skills": "./skills"
+}

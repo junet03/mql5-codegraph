@@ -34,6 +34,7 @@ open risks, and the exact next objective so work can continue safely across sess
 | 2026-07-30 | [003 — Cross-platform compiler paths](2026-07-30-003-cross-platform-compiler-paths.md) | Windows and POSIX absolute diagnostic paths now retain outside-project semantics on every host | Push the focused fix and verify the full hosted CI matrix |
 | 2026-07-30 | [004 — Public v0.3.0 release](2026-07-30-004-public-v0.3.0-release.md) | v0.3.0 published with verified artifacts, public install, and zero open security alerts | Harden v0.3.1 artifact provenance and upload runtime |
 | 2026-08-22 | [001 — Analysis-budget agent guidance](2026-08-22-001-analysis-budget-agent-guidance.md) | Budget exhaustion now distinguishes analyzer work from model tokens and returns ordered retry actions | Prepare the next compatible release |
+| 2026-08-22 | [002 — ZCode/Claude marketplace manifest](2026-08-22-002-zcode-marketplace-manifest.md) | Standard `.claude-plugin` marketplace and plugin manifests added for ZCode/Claude plugin-management ingestion | Post-merge: install via ZCode Plugin Management and confirm the plugin id |
 
 ## Truth hierarchy
 
